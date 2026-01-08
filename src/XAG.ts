@@ -1,9 +1,13 @@
 import { Client, Wallet, Payment, Memo, xrpToDrops } from 'xrpl';
-import { AgentConfig, Agent, TradeConfig, TradeResult, ReputationResult } from './types';
+import { AgentConfig, Agent, TradeConfig, TradeResult, ReputationResult, AgentProfile, Intent, Negotiation, VerificationResult } from './types';
 import { DIDManager } from './identity/DIDManager';
 import { EscrowManager } from './escrow/EscrowManager';
 import { ReputationService } from './reputation/ReputationService';
 import { RLUSDManager } from './currency/RLUSDManager';
+import { ProfileManager } from './profile/ProfileManager';
+import { VerificationService } from './verification/VerificationService';
+import { IntentService } from './intent/IntentService';
+import { NegotiationService } from './negotiation/NegotiationService';
 
 export class XAG {
   private client: Client;
@@ -12,6 +16,10 @@ export class XAG {
   private escrowManager: EscrowManager;
   private reputationService: ReputationService;
   private rlusdManager: RLUSDManager;
+  private profileManager: ProfileManager;
+  private verificationService: VerificationService;
+  private intentService: IntentService;
+  private negotiationService: NegotiationService;
   private agentWallets: Map<string, Wallet> = new Map(); // Store wallets by DID
 
   constructor(network: string = 'wss://s.altnet.rippletest.net:51233') {
@@ -21,6 +29,10 @@ export class XAG {
     this.escrowManager = new EscrowManager(this.client);
     this.reputationService = new ReputationService(this.client);
     this.rlusdManager = new RLUSDManager(this.client);
+    this.profileManager = new ProfileManager(this.client);
+    this.verificationService = new VerificationService(this.client);
+    this.intentService = new IntentService(this.client);
+    this.negotiationService = new NegotiationService(this.client);
   }
 
   async connect() {
@@ -373,8 +385,8 @@ export class XAG {
     hash: string;
     type: string;
     result: string;
-    timestamp?: string;
-  }>> {
+      timestamp?: string;
+    }>> {
     await this.connect();
 
     const address = this.didManager.resolveDID(agentDID);
@@ -393,5 +405,135 @@ export class XAG {
       result: tx.meta?.TransactionResult || 'Unknown',
       timestamp: tx.tx?.date ? new Date((tx.tx.date + 946684800) * 1000).toISOString() : undefined
     }));
+  }
+
+  /**
+   * Updates agent profile on-chain
+   */
+  async updateProfile(agentDID: string, profile: AgentProfile, agentSeed?: string): Promise<string> {
+    await this.connect();
+
+    let wallet: Wallet;
+    try {
+      wallet = this.getWalletFromDID(agentDID, agentSeed);
+    } catch (error) {
+      throw new Error(`Agent wallet not found. Please create agent first or provide agentSeed. ${error}`);
+    }
+
+    const txHash = await this.profileManager.updateProfile(wallet, profile);
+    console.log(`\n✅ Profile updated`);
+    console.log(`   Transaction Hash: ${txHash}`);
+    console.log(`   View on Testnet: https://testnet.xrpl.org/transactions/${txHash}`);
+
+    return txHash;
+  }
+
+  /**
+   * Gets agent profile from blockchain
+   */
+  async getProfile(agentDID: string): Promise<AgentProfile | null> {
+    await this.connect();
+    const address = this.didManager.resolveDID(agentDID);
+    return await this.profileManager.getProfile(address);
+  }
+
+  /**
+   * Verifies an agent's credentials
+   */
+  async verifyAgent(agentDID: string, requirements?: {
+    minReputation?: number;
+    requireProfile?: boolean;
+    requiredCapabilities?: string[];
+  }): Promise<VerificationResult> {
+    await this.connect();
+    return await this.verificationService.verifyAgent(agentDID, requirements);
+  }
+
+  /**
+   * Broadcasts an intent (offer or request)
+   */
+  async broadcastIntent(
+    agentDID: string,
+    intent: Omit<Intent, 'agentDID' | 'timestamp' | 'txHash' | 'status'>,
+    agentSeed?: string
+  ): Promise<string> {
+    await this.connect();
+    const txHash = await this.intentService.broadcastIntent(agentDID, intent, agentSeed);
+    console.log(`\n📢 Intent broadcasted`);
+    console.log(`   Type: ${intent.type}`);
+    console.log(`   Category: ${intent.category}`);
+    console.log(`   Transaction Hash: ${txHash}`);
+    console.log(`   🔗 View on Testnet: https://testnet.xrpl.org/transactions/${txHash}`);
+    return txHash;
+  }
+
+  /**
+   * Searches for matching intents
+   */
+  async searchIntents(criteria: {
+    type?: 'offer' | 'request';
+    category?: string;
+    agentDID?: string;
+    limit?: number;
+  }): Promise<Intent[]> {
+    await this.connect();
+    return await this.intentService.searchIntents(criteria);
+  }
+
+  /**
+   * Initiates a negotiation
+   */
+  async initiateNegotiation(
+    initiatorDID: string,
+    participantDID: string,
+    initialOffer: any,
+    initiatorSeed?: string
+  ): Promise<{ negotiationId: string; txHash: string }> {
+    await this.connect();
+    const result = await this.negotiationService.initiateNegotiation(
+      initiatorDID,
+      participantDID,
+      initialOffer,
+      initiatorSeed
+    );
+    console.log(`\n🤝 Negotiation initiated`);
+    console.log(`   Negotiation ID: ${result.negotiationId}`);
+    console.log(`   Transaction Hash: ${result.txHash}`);
+    console.log(`   🔗 View on Testnet: https://testnet.xrpl.org/transactions/${result.txHash}`);
+    return result;
+  }
+
+  /**
+   * Adds a counter-offer or response to negotiation
+   */
+  async counterOffer(
+    negotiationId: string,
+    originalTxHash: string,
+    responderDID: string,
+    action: 'counter' | 'accept' | 'reject',
+    counterTerms?: any,
+    responderSeed?: string
+  ): Promise<string> {
+    await this.connect();
+    const txHash = await this.negotiationService.counterOffer(
+      negotiationId,
+      originalTxHash,
+      responderDID,
+      action,
+      counterTerms,
+      responderSeed
+    );
+    console.log(`\n🤝 Negotiation ${action}ed`);
+    console.log(`   Transaction Hash: ${txHash}`);
+    console.log(`   🔗 View on Testnet: https://testnet.xrpl.org/transactions/${txHash}`);
+    return txHash;
+  }
+
+  /**
+   * Gets negotiation history
+   */
+  async getNegotiation(negotiationId: string, participantDID: string): Promise<Negotiation | null> {
+    await this.connect();
+    return await this.negotiationService.getNegotiation(negotiationId, participantDID);
   }
 }

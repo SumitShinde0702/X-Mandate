@@ -288,6 +288,232 @@ history.forEach(tx => {
 
 ---
 
+##### `updateProfile(agentDID: string, profile: AgentProfile, agentSeed?: string): Promise<string>`
+Updates an agent's profile metadata (capabilities, pricing, availability) stored on-chain using DIDSet Data field.
+
+**Parameters:**
+- `agentDID`: Agent DID or address (string)
+- `profile`: Profile object with capabilities, pricing, availability, etc. (AgentProfile)
+- `agentSeed`: Agent wallet seed (optional if agent was created via XAG)
+
+**Returns:** `Promise<string>` - Transaction hash of the profile update
+
+**Example:**
+```typescript
+await xag.updateProfile(agent.did, {
+  capabilities: ['solar-energy', 'data-analysis'],
+  pricing: {
+    currency: 'RLUSD',
+    rate: 0.10,
+    unit: 'kWh'
+  },
+  availability: {
+    status: 'available',
+    hours: '9am-5pm UTC'
+  },
+  description: 'Solar energy supplier with data analytics capabilities'
+}, agent.seed);
+```
+
+**Note:** Profile data is stored in the DIDSet Data field on-chain, making it publicly accessible and verifiable.
+
+---
+
+##### `getProfile(agentDID: string): Promise<AgentProfile | null>`
+Retrieves an agent's profile from the blockchain.
+
+**Parameters:**
+- `agentDID`: Agent DID or address (string)
+
+**Returns:** `Promise<AgentProfile | null>` - Profile object or null if not found
+
+**Example:**
+```typescript
+const profile = await xag.getProfile(agent.did);
+if (profile) {
+  console.log(`Capabilities: ${profile.capabilities?.join(', ')}`);
+  console.log(`Pricing: ${profile.pricing?.rate} ${profile.pricing?.currency}/${profile.pricing?.unit}`);
+}
+```
+
+---
+
+##### `verifyAgent(agentDID: string, requirements?: object): Promise<VerificationResult>`
+Verifies an agent's credentials and claims via DIDs. Checks identity, reputation, profile, and credentials.
+
+**Parameters:**
+- `agentDID`: Agent DID or address (string)
+- `requirements` (optional): Verification requirements object
+  - `minReputation`: Minimum reputation score required (number)
+  - `requireProfile`: Whether profile is required (boolean)
+  - `requiredCapabilities`: Array of required capabilities (string[])
+
+**Returns:** `Promise<VerificationResult>`
+- `agentDID`: Agent DID
+- `verified`: Whether agent meets all requirements (boolean)
+- `claims`: Object with identity, reputation, profile, and credentials checks
+- `score`: Overall verification score (0-100)
+
+**Example:**
+```typescript
+const verification = await xag.verifyAgent(agent.did, {
+  minReputation: 50,
+  requireProfile: true,
+  requiredCapabilities: ['solar-energy']
+});
+console.log(`Verified: ${verification.verified}`);
+console.log(`Score: ${verification.score}/100`);
+```
+
+---
+
+##### `broadcastIntent(agentDID: string, intent: Intent, agentSeed?: string): Promise<string>`
+Broadcasts an intent (offer or request) to the blockchain. Agents can announce what they want or offer.
+
+**Parameters:**
+- `agentDID`: Agent DID or address (string)
+- `intent`: Intent object
+  - `type`: 'offer' | 'request' (string)
+  - `category`: Category (e.g., "energy", "data", "service") (string)
+  - `description`: Description of the intent (string)
+  - `terms`: Optional terms object (price, currency, duration, conditions)
+- `agentSeed`: Agent wallet seed (optional if agent was created via XAG)
+
+**Returns:** `Promise<string>` - Transaction hash of the intent broadcast
+
+**Example:**
+```typescript
+const hash = await xag.broadcastIntent(agent.did, {
+  type: 'offer',
+  category: 'energy',
+  description: 'Selling solar energy at competitive rates',
+  terms: {
+    price: 0.10,
+    currency: 'RLUSD',
+    unit: 'kWh'
+  }
+}, agent.seed);
+console.log(`Intent broadcasted: ${hash}`);
+```
+
+**Note:** Intents are stored in transaction memos and can be searched by other agents.
+
+---
+
+##### `searchIntents(criteria: object): Promise<Array<Intent>>`
+Searches for intents broadcasted by agents on the blockchain.
+
+**Parameters:**
+- `criteria.type`: Filter by intent type - 'offer' | 'request' (optional, string)
+- `criteria.category`: Filter by category (optional, string)
+- `criteria.agentDID`: Filter by agent DID (optional, string)
+- `criteria.limit`: Maximum results (optional, defaults to 50, number)
+
+**Returns:** `Promise<Array<Intent>>` - Array of Intent objects matching the criteria
+
+**Example:**
+```typescript
+const intents = await xag.searchIntents({
+  type: 'offer',
+  category: 'energy',
+  limit: 20
+});
+intents.forEach(intent => {
+  console.log(`${intent.type}: ${intent.description}`);
+});
+```
+
+---
+
+##### `initiateNegotiation(initiatorDID: string, participantDID: string, initialOffer: object, initiatorSeed?: string): Promise<{negotiationId: string, txHash: string}>`
+Initiates a multi-step negotiation between two agents with on-chain state tracking.
+
+**Parameters:**
+- `initiatorDID`: Initiator agent DID (string)
+- `participantDID`: Participant agent DID (string)
+- `initialOffer`: Initial offer terms object (amount, currency, description, etc.)
+- `initiatorSeed`: Initiator wallet seed (optional if agent was created via XAG)
+
+**Returns:** `Promise<{negotiationId: string, txHash: string}>`
+- `negotiationId`: Unique negotiation identifier
+- `txHash`: Transaction hash of the initiation
+
+**Example:**
+```typescript
+const result = await xag.initiateNegotiation(
+  buyerAgent.did,
+  sellerAgent.did,
+  {
+    amount: 100,
+    currency: 'RLUSD',
+    description: 'Initial offer for solar panel purchase'
+  },
+  buyerAgent.seed
+);
+console.log(`Negotiation ID: ${result.negotiationId}`);
+```
+
+---
+
+##### `counterOffer(negotiationId: string, originalTxHash: string, responderDID: string, action: 'counter' | 'accept' | 'reject', counterTerms?: object, responderSeed?: string): Promise<string>`
+Responds to a negotiation with a counter-offer, acceptance, or rejection.
+
+**Parameters:**
+- `negotiationId`: Negotiation identifier (string)
+- `originalTxHash`: Original transaction hash (string)
+- `responderDID`: Responder agent DID (string)
+- `action`: Response action - 'counter' | 'accept' | 'reject' (string)
+- `counterTerms`: Counter-offer terms object (required if action is 'counter', optional otherwise)
+- `responderSeed`: Responder wallet seed (optional if agent was created via XAG)
+
+**Returns:** `Promise<string>` - Transaction hash of the counter-offer
+
+**Example:**
+```typescript
+const hash = await xag.counterOffer(
+  negotiationId,
+  originalTxHash,
+  sellerAgent.did,
+  'counter',
+  {
+    amount: 120,
+    currency: 'RLUSD',
+    description: 'Counter-offer with premium features'
+  },
+  sellerAgent.seed
+);
+```
+
+---
+
+##### `getNegotiation(negotiationId: string, participantDID: string): Promise<Negotiation | null>`
+Retrieves the current state of a negotiation from the blockchain.
+
+**Parameters:**
+- `negotiationId`: Negotiation identifier (string)
+- `participantDID`: Participant agent DID (for access control) (string)
+
+**Returns:** `Promise<Negotiation | null>`
+- `negotiationId`: Negotiation identifier
+- `participants`: Array of participant DIDs
+- `status`: Current status ('initiated' | 'counter-offer' | 'accepted' | 'rejected' | 'completed')
+- `currentOffer`: Current offer details
+- `history`: Array of negotiation steps with timestamps and transaction hashes
+
+**Example:**
+```typescript
+const negotiation = await xag.getNegotiation(negotiationId, agent.did);
+if (negotiation) {
+  console.log(`Status: ${negotiation.status}`);
+  console.log(`Steps: ${negotiation.history.length}`);
+  negotiation.history.forEach(step => {
+    console.log(`Step ${step.step}: ${step.action} by ${step.from}`);
+  });
+}
+```
+
+---
+
 ##### `connect(): Promise<void>`
 Connects to the XRPL network.
 
@@ -377,6 +603,89 @@ interface Transaction {
 }
 ```
 
+### `AgentProfile`
+```typescript
+interface AgentProfile {
+  capabilities?: string[]; // e.g., ["solar-energy", "data-analysis"]
+  pricing?: {
+    currency: 'XRP' | 'RLUSD';
+    rate: number; // per unit or per hour
+    unit?: string; // "kWh", "hour", "transaction"
+  };
+  availability?: {
+    status: 'available' | 'busy' | 'offline';
+    hours?: string; // "9am-5pm UTC"
+  };
+  description?: string;
+  contact?: {
+    email?: string;
+    website?: string;
+  };
+  metadata?: Record<string, any>; // Additional custom fields
+}
+```
+
+### `VerificationResult`
+```typescript
+interface VerificationResult {
+  agentDID: string;
+  verified: boolean;
+  claims: {
+    identity?: boolean; // DID is valid
+    reputation?: boolean; // Has minimum reputation
+    profile?: boolean; // Profile exists and is valid
+    credentials?: Array<{
+      type: string;
+      verified: boolean;
+      source: string;
+    }>;
+  };
+  score: number; // Overall verification score 0-100
+}
+```
+
+### `Intent`
+```typescript
+interface Intent {
+  agentDID: string;
+  type: 'offer' | 'request';
+  category: string; // e.g., "energy", "data", "service"
+  description: string;
+  terms?: {
+    price?: number;
+    currency?: 'XRP' | 'RLUSD';
+    duration?: string;
+    conditions?: string[];
+  };
+  timestamp: string;
+  txHash?: string;
+  status?: 'active' | 'fulfilled' | 'cancelled';
+}
+```
+
+### `Negotiation`
+```typescript
+interface Negotiation {
+  negotiationId: string;
+  participants: string[]; // Agent DIDs
+  status: 'initiated' | 'counter-offer' | 'accepted' | 'rejected' | 'completed';
+  currentOffer: {
+    from: string;
+    to: string;
+    terms: any;
+    timestamp: string;
+  };
+  history: Array<{
+    step: number;
+    from: string;
+    action: 'offer' | 'counter' | 'accept' | 'reject';
+    terms: any;
+    timestamp: string;
+    txHash: string;
+  }>;
+}
+```
+
 ---
 
 ## Complete Example
@@ -420,6 +729,41 @@ async function example() {
     const reputation = await xag.getReputation(buyer.did);
     console.log(`Buyer reputation: ${reputation.score}`);
     
+    // 6. Update agent profile
+    await xag.updateProfile(seller.did, {
+      capabilities: ['solar-energy', 'data-analysis'],
+      pricing: { currency: 'RLUSD', rate: 0.10, unit: 'kWh' },
+      availability: { status: 'available', hours: '9am-5pm UTC' }
+    }, seller.seed);
+    
+    // 7. Verify agent
+    const verification = await xag.verifyAgent(seller.did);
+    console.log(`Agent verified: ${verification.verified}, Score: ${verification.score}/100`);
+    
+    // 8. Broadcast intent
+    await xag.broadcastIntent(seller.did, {
+      type: 'offer',
+      category: 'energy',
+      description: 'Selling solar energy',
+      terms: { price: 0.10, currency: 'RLUSD' }
+    }, seller.seed);
+    
+    // 9. Search intents
+    const intents = await xag.searchIntents({ type: 'offer', category: 'energy' });
+    console.log(`Found ${intents.length} intents`);
+    
+    // 10. Start negotiation
+    const negotiation = await xag.initiateNegotiation(
+      buyer.did,
+      seller.did,
+      { amount: 100, currency: 'RLUSD', description: 'Initial offer' },
+      buyer.seed
+    );
+    
+    // 11. View negotiation
+    const negotiationState = await xag.getNegotiation(negotiation.negotiationId, buyer.did);
+    console.log(`Negotiation status: ${negotiationState?.status}`);
+    
   } finally {
     await xag.disconnect();
   }
@@ -434,6 +778,9 @@ async function example() {
 2. **Native Escrows**: Time-locked XRP escrows for trustless commerce
 3. **RLUSD Payments**: Stablecoin payments via TrustLines
 4. **Transaction Memos**: Immutable audit trail for all transactions
+5. **DIDSet Data Field**: On-chain storage for agent profiles
+6. **Intent Broadcasting**: Agents announce offers/requests via memos
+7. **Negotiation State**: Multi-step negotiation tracking on-chain
 
 ---
 

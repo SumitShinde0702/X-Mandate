@@ -410,6 +410,61 @@
              <div id="activityStatus"></div>
              <div id="activityFeed" style="max-height: 400px; overflow-y: auto; margin-top: 15px;"></div>
          </div>
+
+         <!-- Agent Profiles -->
+         <div class="card">
+             <h2>7. Agent Profiles</h2>
+             <p style="margin-bottom: 15px; color: #666;">Store agent capabilities, pricing, and availability on-chain</p>
+             <div class="button-group">
+                 <button id="updateProfile">Update Agent Profile</button>
+                 <button id="viewProfile">View Agent Profile</button>
+             </div>
+             <div id="profileStatus"></div>
+             <div id="profileDisplay" style="margin-top: 15px;"></div>
+         </div>
+
+         <!-- Agent Verification -->
+         <div class="card">
+             <h2>8. Agent Verification</h2>
+             <p style="margin-bottom: 15px; color: #666;">Verify agent credentials and claims</p>
+             <div class="button-group">
+                 <button id="verifyAgent">Verify Agent</button>
+             </div>
+             <div id="verificationStatus"></div>
+             <div id="verificationDisplay" style="margin-top: 15px;"></div>
+         </div>
+
+         <!-- Intent Broadcasting -->
+         <div class="card">
+             <h2>9. Intent Broadcasting</h2>
+             <p style="margin-bottom: 15px; color: #666;">Agents announce what they want or offer</p>
+             <div style="margin-bottom: 15px;">
+                 <select id="intentType" style="padding: 10px; margin-right: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                     <option value="offer">Offer</option>
+                     <option value="request">Request</option>
+                 </select>
+                 <input type="text" id="intentCategory" placeholder="Category (e.g., energy, data)" style="padding: 10px; margin-right: 10px; border: 2px solid #e0e0e0; border-radius: 8px; width: 200px;">
+                 <input type="text" id="intentDescription" placeholder="Description..." style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+             </div>
+             <div class="button-group">
+                 <button id="broadcastIntent">Broadcast Intent</button>
+                 <button id="searchIntents">Search Intents</button>
+             </div>
+             <div id="intentStatus"></div>
+             <div id="intentDisplay" style="max-height: 400px; overflow-y: auto; margin-top: 15px;"></div>
+         </div>
+
+         <!-- Negotiation Framework -->
+         <div class="card">
+             <h2>10. Negotiation Framework</h2>
+             <p style="margin-bottom: 15px; color: #666;">Multi-step negotiation with on-chain state</p>
+             <div class="button-group">
+                 <button id="startNegotiation">Start Negotiation</button>
+                 <button id="viewNegotiation">View Negotiation</button>
+             </div>
+             <div id="negotiationStatus"></div>
+             <div id="negotiationDisplay" style="margin-top: 15px;"></div>
+         </div>
          </div>
 
         <!-- API Documentation Tab -->
@@ -648,6 +703,252 @@ history.forEach(tx => {
                 </div>
 
                 <div class="api-section">
+                    <h3>updateProfile()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;string&gt;</span> updateProfile(agentDID: string, profile: AgentProfile, agentSeed?: string)</div>
+                    <p>Updates an agent's profile metadata (capabilities, pricing, availability) stored on-chain using DIDSet Data field.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>agentDID</strong> <span class="type-badge">string</span>: Agent DID or address</li>
+                        <li><strong>profile</strong> <span class="type-badge">AgentProfile</span>: Profile object with capabilities, pricing, availability, etc.</li>
+                        <li><strong>agentSeed</strong> <span class="type-badge">string</span> (optional): Agent wallet seed</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <p>Transaction hash of the profile update</p>
+
+                    <h4>Example</h4>
+                    <div class="code-block">await xag.updateProfile(agent.did, {
+  capabilities: ['solar-energy', 'data-analysis'],
+  pricing: {
+    currency: 'RLUSD',
+    rate: 0.10,
+    unit: 'kWh'
+  },
+  availability: {
+    status: 'available',
+    hours: '9am-5pm UTC'
+  },
+  description: 'Solar energy supplier with data analytics capabilities'
+}, agent.seed);</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>getProfile()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;AgentProfile | null&gt;</span> getProfile(agentDID: string)</div>
+                    <p>Retrieves an agent's profile from the blockchain.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>agentDID</strong> <span class="type-badge">string</span>: Agent DID or address</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <p>AgentProfile object or null if not found</p>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const profile = await xag.getProfile(agent.did);
+if (profile) {
+  console.log(`Capabilities: ${profile.capabilities?.join(', ')}`);
+  console.log(`Pricing: ${profile.pricing?.rate} ${profile.pricing?.currency}/${profile.pricing?.unit}`);
+}</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>verifyAgent()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;VerificationResult&gt;</span> verifyAgent(agentDID: string, requirements?: object)</div>
+                    <p>Verifies an agent's credentials and claims via DIDs. Checks identity, reputation, profile, and credentials.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>agentDID</strong> <span class="type-badge">string</span>: Agent DID or address</li>
+                        <li><strong>requirements</strong> <span class="type-badge">object</span> (optional): Verification requirements
+                            <ul>
+                                <li><strong>minReputation</strong>: Minimum reputation score required</li>
+                                <li><strong>requireProfile</strong>: Whether profile is required</li>
+                                <li><strong>requiredCapabilities</strong>: Array of required capabilities</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <ul class="param-list">
+                        <li><strong>agentDID</strong>: Agent DID</li>
+                        <li><strong>verified</strong>: Whether agent meets all requirements</li>
+                        <li><strong>claims</strong>: Object with identity, reputation, profile, and credentials checks</li>
+                        <li><strong>score</strong>: Overall verification score (0-100)</li>
+                    </ul>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const verification = await xag.verifyAgent(agent.did, {
+  minReputation: 50,
+  requireProfile: true,
+  requiredCapabilities: ['solar-energy']
+});
+console.log(`Verified: ${verification.verified}`);
+console.log(`Score: ${verification.score}/100`);</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>broadcastIntent()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;string&gt;</span> broadcastIntent(agentDID: string, intent: Intent, agentSeed?: string)</div>
+                    <p>Broadcasts an intent (offer or request) to the blockchain. Agents can announce what they want or offer.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>agentDID</strong> <span class="type-badge">string</span>: Agent DID or address</li>
+                        <li><strong>intent</strong> <span class="type-badge">Intent</span>: Intent object
+                            <ul>
+                                <li><strong>type</strong>: 'offer' | 'request'</li>
+                                <li><strong>category</strong>: Category (e.g., "energy", "data", "service")</li>
+                                <li><strong>description</strong>: Description of the intent</li>
+                                <li><strong>terms</strong>: Optional terms (price, currency, duration, conditions)</li>
+                            </ul>
+                        </li>
+                        <li><strong>agentSeed</strong> <span class="type-badge">string</span> (optional): Agent wallet seed</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <p>Transaction hash of the intent broadcast</p>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const hash = await xag.broadcastIntent(agent.did, {
+  type: 'offer',
+  category: 'energy',
+  description: 'Selling solar energy at competitive rates',
+  terms: {
+    price: 0.10,
+    currency: 'RLUSD',
+    unit: 'kWh'
+  }
+}, agent.seed);</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>searchIntents()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;Array&lt;Intent&gt;&gt;</span> searchIntents(criteria: object)</div>
+                    <p>Searches for intents broadcasted by agents on the blockchain.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>criteria.type</strong> <span class="type-badge">'offer' | 'request'</span> (optional): Filter by intent type</li>
+                        <li><strong>criteria.category</strong> <span class="type-badge">string</span> (optional): Filter by category</li>
+                        <li><strong>criteria.agentDID</strong> <span class="type-badge">string</span> (optional): Filter by agent DID</li>
+                        <li><strong>criteria.limit</strong> <span class="type-badge">number</span> (optional): Maximum results, defaults to 50</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <p>Array of Intent objects matching the criteria</p>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const intents = await xag.searchIntents({
+  type: 'offer',
+  category: 'energy',
+  limit: 20
+});
+intents.forEach(intent => {
+  console.log(`${intent.type}: ${intent.description}`);
+});</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>initiateNegotiation()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;{negotiationId: string, txHash: string}&gt;</span> initiateNegotiation(initiatorDID: string, participantDID: string, initialOffer: object, initiatorSeed?: string)</div>
+                    <p>Initiates a multi-step negotiation between two agents with on-chain state tracking.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>initiatorDID</strong> <span class="type-badge">string</span>: Initiator agent DID</li>
+                        <li><strong>participantDID</strong> <span class="type-badge">string</span>: Participant agent DID</li>
+                        <li><strong>initialOffer</strong> <span class="type-badge">object</span>: Initial offer terms (amount, currency, description, etc.)</li>
+                        <li><strong>initiatorSeed</strong> <span class="type-badge">string</span> (optional): Initiator wallet seed</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <ul class="param-list">
+                        <li><strong>negotiationId</strong>: Unique negotiation identifier</li>
+                        <li><strong>txHash</strong>: Transaction hash of the initiation</li>
+                    </ul>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const result = await xag.initiateNegotiation(
+  buyerAgent.did,
+  sellerAgent.did,
+  {
+    amount: 100,
+    currency: 'RLUSD',
+    description: 'Initial offer for solar panel purchase'
+  },
+  buyerAgent.seed
+);
+console.log(`Negotiation ID: ${result.negotiationId}`);</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>counterOffer()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;string&gt;</span> counterOffer(negotiationId: string, originalTxHash: string, responderDID: string, action: 'counter' | 'accept' | 'reject', counterTerms?: object, responderSeed?: string)</div>
+                    <p>Responds to a negotiation with a counter-offer, acceptance, or rejection.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>negotiationId</strong> <span class="type-badge">string</span>: Negotiation identifier</li>
+                        <li><strong>originalTxHash</strong> <span class="type-badge">string</span>: Original transaction hash</li>
+                        <li><strong>responderDID</strong> <span class="type-badge">string</span>: Responder agent DID</li>
+                        <li><strong>action</strong> <span class="type-badge">'counter' | 'accept' | 'reject'</span>: Response action</li>
+                        <li><strong>counterTerms</strong> <span class="type-badge">object</span> (optional): Counter-offer terms (required if action is 'counter')</li>
+                        <li><strong>responderSeed</strong> <span class="type-badge">string</span> (optional): Responder wallet seed</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <p>Transaction hash of the counter-offer</p>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const hash = await xag.counterOffer(
+  negotiationId,
+  originalTxHash,
+  sellerAgent.did,
+  'counter',
+  {
+    amount: 120,
+    currency: 'RLUSD',
+    description: 'Counter-offer with premium features'
+  },
+  sellerAgent.seed
+);</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>getNegotiation()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;Negotiation | null&gt;</span> getNegotiation(negotiationId: string, participantDID: string)</div>
+                    <p>Retrieves the current state of a negotiation from the blockchain.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>negotiationId</strong> <span class="type-badge">string</span>: Negotiation identifier</li>
+                        <li><strong>participantDID</strong> <span class="type-badge">string</span>: Participant agent DID (for access control)</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <ul class="param-list">
+                        <li><strong>negotiationId</strong>: Negotiation identifier</li>
+                        <li><strong>participants</strong>: Array of participant DIDs</li>
+                        <li><strong>status</strong>: Current status ('initiated' | 'counter-offer' | 'accepted' | 'rejected' | 'completed')</li>
+                        <li><strong>currentOffer</strong>: Current offer details</li>
+                        <li><strong>history</strong>: Array of negotiation steps with timestamps and transaction hashes</li>
+                    </ul>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const negotiation = await xag.getNegotiation(negotiationId, agent.did);
+if (negotiation) {
+  console.log(`Status: ${negotiation.status}`);
+  console.log(`Steps: ${negotiation.history.length}`);
+  negotiation.history.forEach(step => {
+    console.log(`Step ${step.step}: ${step.action} by ${step.from}`);
+  });
+}</div>
+                </div>
+
+                <div class="api-section">
                     <h3>connect() & disconnect()</h3>
                     <div class="method-signature"><span class="return-type">Promise&lt;void&gt;</span> connect()</div>
                     <div class="method-signature"><span class="return-type">Promise&lt;void&gt;</span> disconnect()</div>
@@ -715,6 +1016,41 @@ async function example() {
      const history = await xag.getTransactionHistory(buyer.did, 20);
      console.log(`Transaction history: ${history.length} transactions`);
      
+     // 11. Update agent profile
+     await xag.updateProfile(seller.did, {
+       capabilities: ['solar-energy', 'data-analysis'],
+       pricing: { currency: 'RLUSD', rate: 0.10, unit: 'kWh' },
+       availability: { status: 'available', hours: '9am-5pm UTC' }
+     }, seller.seed);
+     
+     // 12. Verify agent
+     const verification = await xag.verifyAgent(seller.did);
+     console.log(`Agent verified: ${verification.verified}, Score: ${verification.score}/100`);
+     
+     // 13. Broadcast intent
+     await xag.broadcastIntent(seller.did, {
+       type: 'offer',
+       category: 'energy',
+       description: 'Selling solar energy',
+       terms: { price: 0.10, currency: 'RLUSD' }
+     }, seller.seed);
+     
+     // 14. Search intents
+     const intents = await xag.searchIntents({ type: 'offer', category: 'energy' });
+     console.log(`Found ${intents.length} intents`);
+     
+     // 15. Start negotiation
+     const negotiation = await xag.initiateNegotiation(
+       buyer.did,
+       seller.did,
+       { amount: 100, currency: 'RLUSD', description: 'Initial offer' },
+       buyer.seed
+     );
+     
+     // 16. View negotiation
+     const negotiationState = await xag.getNegotiation(negotiation.negotiationId, buyer.did);
+     console.log(`Negotiation status: ${negotiationState?.status}`);
+     
    } finally {
      await xag.disconnect();
    }
@@ -728,6 +1064,9 @@ async function example() {
                         <li><strong>Native Escrows</strong>: Time-locked XRP escrows for trustless commerce</li>
                         <li><strong>RLUSD Payments</strong>: Stablecoin payments via TrustLines</li>
                         <li><strong>Transaction Memos</strong>: Immutable audit trail for all transactions</li>
+                        <li><strong>DIDSet Data Field</strong>: On-chain storage for agent profiles</li>
+                        <li><strong>Intent Broadcasting</strong>: Agents announce offers/requests via memos</li>
+                        <li><strong>Negotiation State</strong>: Multi-step negotiation tracking on-chain</li>
                     </ul>
                 </div>
             </div>
@@ -735,31 +1074,33 @@ async function example() {
     </div>
 
     <script type="module">
-        // Tab switching
-        function switchTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tab switching
+            function switchTab(tabName) {
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Show selected tab
+                document.getElementById(tabName + '-tab').classList.add('active');
+                document.getElementById(tabName + '-tab-btn').classList.add('active');
+            }
             
-            // Show selected tab
-            document.getElementById(tabName + '-tab').classList.add('active');
-            document.getElementById(tabName + '-tab-btn').classList.add('active');
-        }
-        
-        // Set up tab button listeners
-        document.getElementById('demo-tab-btn').addEventListener('click', () => switchTab('demo'));
-        document.getElementById('docs-tab-btn').addEventListener('click', () => switchTab('docs'));
-        
-        // Note: This is a frontend demo that would need a backend API
-        // For hackathon, we'll create a simple Node.js server
-        
-        let buyerAgent = null;
-        let sellerAgent = null;
-        let currentTrade = null;
+            // Set up tab button listeners
+            document.getElementById('demo-tab-btn').addEventListener('click', () => switchTab('demo'));
+            document.getElementById('docs-tab-btn').addEventListener('click', () => switchTab('docs'));
+            
+            // Note: This is a frontend demo that would need a backend API
+            // For hackathon, we'll create a simple Node.js server
+            
+            let buyerAgent = null;
+            let sellerAgent = null;
+            let currentTrade = null;
 
         function addStatus(elementId, message, type = 'info') {
             const element = document.getElementById(elementId);
@@ -1153,6 +1494,374 @@ async function example() {
                  btn.textContent = 'Load Transaction History';
              }
          });
+
+         // Update Profile
+         document.getElementById('updateProfile').addEventListener('click', async () => {
+             if (!buyerAgent) {
+                 addStatus('profileStatus', '❌ Please create an agent first!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('updateProfile');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Updating...';
+             clearStatus('profileStatus');
+             clearStatus('profileDisplay');
+
+             try {
+                 const profile = {
+                     capabilities: ['solar-energy', 'data-analysis'],
+                     pricing: {
+                         currency: 'RLUSD',
+                         rate: 0.10,
+                         unit: 'kWh'
+                     },
+                     availability: {
+                         status: 'available',
+                         hours: '9am-5pm UTC'
+                     },
+                     description: 'Solar energy supplier with data analytics capabilities'
+                 };
+
+                 const response = await fetch(`/api/profile/${encodeURIComponent(buyerAgent.did)}`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         profile,
+                         agentSeed: buyerAgent.seed
+                     })
+                 });
+
+                const data = await response.json();
+                addStatus('profileStatus', `✅ Profile updated!\nHash: ${data.hash}`, 'success');
+                
+                // Add clickable link
+                const profileLinkDiv = document.createElement('div');
+                profileLinkDiv.className = 'status info';
+                profileLinkDiv.innerHTML = `<a href="https://testnet.xrpl.org/transactions/${data.hash}" target="_blank" style="color: #0c5460; text-decoration: underline; font-weight: bold;">🔗 View on Testnet: ${data.hash}</a>`;
+                document.getElementById('profileStatus').appendChild(profileLinkDiv);
+                
+                const profileDiv = document.createElement('div');
+                 profileDiv.className = 'agent-card';
+                 profileDiv.innerHTML = `
+                     <h3>Agent Profile</h3>
+                     <p><strong>Capabilities:</strong> ${profile.capabilities.join(', ')}</p>
+                     <p><strong>Pricing:</strong> ${profile.pricing.rate} ${profile.pricing.currency}/${profile.pricing.unit}</p>
+                     <p><strong>Status:</strong> ${profile.availability.status}</p>
+                     <p><strong>Description:</strong> ${profile.description}</p>
+                 `;
+                 document.getElementById('profileDisplay').appendChild(profileDiv);
+
+             } catch (error) {
+                 addStatus('profileStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'Update Agent Profile';
+             }
+         });
+
+         // View Profile
+         document.getElementById('viewProfile').addEventListener('click', async () => {
+             if (!buyerAgent) {
+                 addStatus('profileStatus', '❌ Please create an agent first!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('viewProfile');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Loading...';
+             clearStatus('profileStatus');
+             clearStatus('profileDisplay');
+
+             try {
+                 const response = await fetch(`/api/profile/${encodeURIComponent(buyerAgent.did)}`);
+                 const profile = await response.json();
+
+                 if (!profile) {
+                     addStatus('profileStatus', 'No profile found. Update profile first!', 'info');
+                     return;
+                 }
+
+                 const profileDiv = document.createElement('div');
+                 profileDiv.className = 'agent-card';
+                 profileDiv.innerHTML = `
+                     <h3>Agent Profile</h3>
+                     ${profile.capabilities ? `<p><strong>Capabilities:</strong> ${profile.capabilities.join(', ')}</p>` : ''}
+                     ${profile.pricing ? `<p><strong>Pricing:</strong> ${profile.pricing.rate} ${profile.pricing.currency}/${profile.pricing.unit || 'unit'}</p>` : ''}
+                     ${profile.availability ? `<p><strong>Status:</strong> ${profile.availability.status}</p>` : ''}
+                     ${profile.description ? `<p><strong>Description:</strong> ${profile.description}</p>` : ''}
+                 `;
+                 document.getElementById('profileDisplay').appendChild(profileDiv);
+                 addStatus('profileStatus', '✅ Profile loaded!', 'success');
+
+             } catch (error) {
+                 addStatus('profileStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'View Agent Profile';
+             }
+         });
+
+         // Verify Agent
+         document.getElementById('verifyAgent').addEventListener('click', async () => {
+             if (!buyerAgent) {
+                 addStatus('verificationStatus', '❌ Please create an agent first!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('verifyAgent');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Verifying...';
+             clearStatus('verificationStatus');
+             clearStatus('verificationDisplay');
+
+             try {
+                 const response = await fetch(`/api/verify/${encodeURIComponent(buyerAgent.did)}`);
+                 const verification = await response.json();
+
+                 const verifyDiv = document.createElement('div');
+                 verifyDiv.className = 'agent-card';
+                 verifyDiv.style.borderLeftColor = verification.verified ? '#28a745' : '#dc3545';
+                 verifyDiv.innerHTML = `
+                     <h3>Verification Result</h3>
+                     <p><strong>Status:</strong> <span style="color: ${verification.verified ? '#28a745' : '#dc3545'}; font-weight: bold;">${verification.verified ? '✅ VERIFIED' : '❌ NOT VERIFIED'}</span></p>
+                     <p><strong>Verification Score:</strong> ${verification.score}/100</p>
+                     <h4 style="margin-top: 15px;">Claims:</h4>
+                     <ul style="list-style: none; padding: 0;">
+                         <li>${verification.claims.identity ? '✅' : '❌'} Identity: ${verification.claims.identity ? 'Verified' : 'Not verified'}</li>
+                         <li>${verification.claims.reputation ? '✅' : '❌'} Reputation: ${verification.claims.reputation ? 'Verified' : 'Not verified'}</li>
+                         <li>${verification.claims.profile ? '✅' : '❌'} Profile: ${verification.claims.profile ? 'Verified' : 'Not verified'}</li>
+                     </ul>
+                     ${verification.claims.credentials.length > 0 ? `
+                         <h4 style="margin-top: 15px;">Credentials:</h4>
+                         <ul style="list-style: none; padding: 0;">
+                             ${verification.claims.credentials.map((cred) => 
+                                 `<li>✅ ${cred.type}: ${cred.source}</li>`
+                             ).join('')}
+                         </ul>
+                     ` : ''}
+                 `;
+                 document.getElementById('verificationDisplay').appendChild(verifyDiv);
+                 addStatus('verificationStatus', `✅ Verification complete! Score: ${verification.score}/100`, 'success');
+
+             } catch (error) {
+                 addStatus('verificationStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'Verify Agent';
+             }
+         });
+
+         // Broadcast Intent
+         document.getElementById('broadcastIntent').addEventListener('click', async () => {
+             if (!buyerAgent) {
+                 addStatus('intentStatus', '❌ Please create an agent first!', 'error');
+                 return;
+             }
+
+             const type = document.getElementById('intentType').value;
+             const category = document.getElementById('intentCategory').value;
+             const description = document.getElementById('intentDescription').value;
+
+             if (!category || !description) {
+                 addStatus('intentStatus', '❌ Please fill in category and description!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('broadcastIntent');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Broadcasting...';
+             clearStatus('intentStatus');
+
+             try {
+                 const response = await fetch('/api/intent', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         agentDID: buyerAgent.did,
+                         intent: {
+                             type,
+                             category,
+                             description,
+                             terms: {
+                                 price: 100,
+                                 currency: 'RLUSD'
+                             }
+                         },
+                         agentSeed: buyerAgent.seed
+                     })
+                 });
+
+                const data = await response.json();
+                addStatus('intentStatus', `✅ Intent broadcasted!\nHash: ${data.hash}`, 'success');
+                
+                // Add clickable link
+                const linkDiv = document.createElement('div');
+                linkDiv.className = 'status info';
+                linkDiv.innerHTML = `<a href="https://testnet.xrpl.org/transactions/${data.hash}" target="_blank" style="color: #0c5460; text-decoration: underline; font-weight: bold;">🔗 View on Testnet: ${data.hash}</a>`;
+                document.getElementById('intentStatus').appendChild(linkDiv);
+                
+                document.getElementById('intentCategory').value = '';
+                document.getElementById('intentDescription').value = '';
+
+             } catch (error) {
+                 addStatus('intentStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'Broadcast Intent';
+             }
+         });
+
+         // Search Intents
+         document.getElementById('searchIntents').addEventListener('click', async () => {
+             if (!buyerAgent) {
+                 addStatus('intentStatus', '❌ Please create an agent first!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('searchIntents');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Searching...';
+             clearStatus('intentStatus');
+             clearStatus('intentDisplay');
+
+             try {
+                 const response = await fetch(`/api/intents?agentDID=${encodeURIComponent(buyerAgent.did)}&limit=10`);
+                 const intents = await response.json();
+
+                 if (intents.length === 0) {
+                     addStatus('intentStatus', 'No intents found. Try broadcasting one first!', 'info');
+                     return;
+                 }
+
+                 const displayDiv = document.getElementById('intentDisplay');
+                 intents.forEach((intent) => {
+                     const intentDiv = document.createElement('div');
+                     intentDiv.className = 'agent-card';
+                     intentDiv.style.borderLeftColor = intent.type === 'offer' ? '#28a745' : '#667eea';
+                     intentDiv.innerHTML = `
+                         <h3>${intent.type.toUpperCase()}: ${intent.category}</h3>
+                         <p><strong>Description:</strong> ${intent.description}</p>
+                         ${intent.terms ? `<p><strong>Terms:</strong> ${intent.terms.price} ${intent.terms.currency || ''}</p>` : ''}
+                         <p><strong>Status:</strong> ${intent.status || 'active'}</p>
+                         <small style="color: #666;">${new Date(intent.timestamp).toLocaleString()}</small>
+                         ${intent.txHash ? `<a href="https://testnet.xrpl.org/transactions/${intent.txHash}" target="_blank" style="font-size: 12px; color: #667eea; display: block; margin-top: 5px;">View TX</a>` : ''}
+                     `;
+                     displayDiv.appendChild(intentDiv);
+                 });
+
+                 addStatus('intentStatus', `✅ Found ${intents.length} intents`, 'success');
+
+             } catch (error) {
+                 addStatus('intentStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'Search Intents';
+             }
+         });
+
+         // Start Negotiation
+         document.getElementById('startNegotiation').addEventListener('click', async () => {
+             if (!buyerAgent || !sellerAgent) {
+                 addStatus('negotiationStatus', '❌ Please create both agents first!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('startNegotiation');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Starting...';
+             clearStatus('negotiationStatus');
+             clearStatus('negotiationDisplay');
+
+             try {
+                 const response = await fetch('/api/negotiation', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         initiatorDID: buyerAgent.did,
+                         participantDID: sellerAgent.did,
+                         initialOffer: {
+                             amount: 100,
+                             currency: 'RLUSD',
+                             description: 'Initial offer for solar panel purchase'
+                         },
+                         initiatorSeed: buyerAgent.seed
+                     })
+                 });
+
+                const data = await response.json();
+                addStatus('negotiationStatus', `✅ Negotiation started!\nID: ${data.negotiationId}\nHash: ${data.txHash}`, 'success');
+                
+                // Add clickable link
+                const negotiationLinkDiv = document.createElement('div');
+                negotiationLinkDiv.className = 'status info';
+                negotiationLinkDiv.innerHTML = `<a href="https://testnet.xrpl.org/transactions/${data.txHash}" target="_blank" style="color: #0c5460; text-decoration: underline; font-weight: bold;">🔗 View on Testnet: ${data.txHash}</a>`;
+                document.getElementById('negotiationStatus').appendChild(negotiationLinkDiv);
+                
+                // Store negotiation ID for later
+                window.currentNegotiationId = data.negotiationId;
+                window.currentNegotiationHash = data.txHash;
+
+             } catch (error) {
+                 addStatus('negotiationStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'Start Negotiation';
+             }
+         });
+
+         // View Negotiation
+         document.getElementById('viewNegotiation').addEventListener('click', async () => {
+             if (!window.currentNegotiationId || !buyerAgent) {
+                 addStatus('negotiationStatus', '❌ Please start a negotiation first!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('viewNegotiation');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Loading...';
+             clearStatus('negotiationStatus');
+             clearStatus('negotiationDisplay');
+
+             try {
+                 const response = await fetch(`/api/negotiation/${window.currentNegotiationId}?participantDID=${encodeURIComponent(buyerAgent.did)}`);
+                 const negotiation = await response.json();
+
+                 if (!negotiation) {
+                     addStatus('negotiationStatus', 'Negotiation not found', 'error');
+                     return;
+                 }
+
+                 const negDiv = document.createElement('div');
+                 negDiv.className = 'agent-card';
+                 negDiv.innerHTML = `
+                     <h3>Negotiation: ${negotiation.negotiationId}</h3>
+                     <p><strong>Status:</strong> ${negotiation.status}</p>
+                     <p><strong>Participants:</strong> ${negotiation.participants.join(', ')}</p>
+                     <h4 style="margin-top: 15px;">Current Offer:</h4>
+                     <p>From: ${negotiation.currentOffer.from}</p>
+                     <p>Terms: ${JSON.stringify(negotiation.currentOffer.terms, null, 2)}</p>
+                     <h4 style="margin-top: 15px;">History (${negotiation.history.length} steps):</h4>
+                     <ul style="list-style: none; padding: 0;">
+                         ${negotiation.history.map((step) => 
+                             `<li style="margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 5px;">
+                                 Step ${step.step}: ${step.action} by ${step.from}<br>
+                                 <small>${new Date(step.timestamp).toLocaleString()}</small>
+                             </li>`
+                         ).join('')}
+                     </ul>
+                 `;
+                 document.getElementById('negotiationDisplay').appendChild(negDiv);
+                 addStatus('negotiationStatus', '✅ Negotiation loaded!', 'success');
+
+             } catch (error) {
+                 addStatus('negotiationStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'View Negotiation';
+             }
+         });
+        }); // End of DOMContentLoaded
      </script>
  </body>
  </html>

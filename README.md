@@ -56,12 +56,34 @@ const score = await XAG.getReputation(agentDID);
 // Aggregates successful XRPL Escrow completions and on-chain logs
 ```
 
+## 🚀 Getting Started
+
+### Installation
+```bash
+npm install
+```
+
+### Run CLI Demo
+```bash
+npm run demo
+```
+
+### Run Web Frontend
+```bash
+npm run server
+```
+Then open http://localhost:3000 in your browser to see the interactive demo!
+
+### Documentation
+- **[API Documentation](./docs/API.md)** - Complete API reference
+- **[Quick Start Guide](./docs/QUICKSTART.md)** - Get started in 5 minutes
+
 ## 🎯 Rubric Alignment
 
 | Rubric | X-Agent Gateway Strategy |
 | :--- | :--- |
 | **Use of XRPL (30%)** | Uses XLS-40 DIDs, Native Escrows, RLUSD, and Trust Lines. No "off-chain" workarounds. |
 | **Business Potential (20%)** | Targets the $50B+ Agentic AI market by providing the missing payment rails for autonomous commerce. |
-| **Completeness (30%)** | Provides a full SDK, detailed documentation, and a sample "Buyer-Seller" agent interaction demo. |
+| **Completeness (30%)** | Provides a full SDK, detailed documentation, interactive web frontend, and a sample "Buyer-Seller" agent interaction demo. |
 | **Social Impact (30% - BGA)** | Directly enables decentralized micro-grids and sustainable supply chains. |
 

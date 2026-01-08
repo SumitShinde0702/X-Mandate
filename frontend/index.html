@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-Agent Gateway (XAG) - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .agent-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .agent-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .agent-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .agent-card p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .reputation {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .reputation-item {
+            flex: 1;
+            min-width: 200px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .reputation-item .score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .transaction-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .transaction-link:hover {
+            background: #764ba2;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* API Docs Styles */
+        .api-docs {
+            color: #333;
+        }
+
+        .api-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .api-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .api-section h4 {
+            color: #764ba2;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .param-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .param-list li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .param-list li:before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .method-signature {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+
+        .return-type {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .type-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 X-Agent Gateway (XAG)</h1>
+            <p>Trust & Settlement Middleware for Autonomous Agents</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" id="demo-tab-btn">Demo</button>
+            <button class="tab-button" id="docs-tab-btn">API Documentation</button>
+        </div>
+
+        <!-- Demo Tab -->
+        <div id="demo-tab" class="tab-content active">
+        <!-- Agent Creation -->
+        <div class="card">
+            <h2>1. Create Agents</h2>
+            <div class="button-group">
+                <button id="createBuyer">Create Buyer Agent</button>
+                <button id="createSeller">Create Seller Agent</button>
+            </div>
+            <div id="agentStatus"></div>
+            <div id="agentInfo" class="agent-info"></div>
+        </div>
+
+        <!-- Trade Initiation -->
+        <div class="card">
+            <h2>2. Initiate Trade</h2>
+            <div class="button-group">
+                <button id="initiateXRP">Initiate XRP Escrow Trade</button>
+                <button id="initiateRLUSD">Initiate RLUSD Payment</button>
+            </div>
+            <div id="tradeStatus"></div>
+        </div>
+
+        <!-- Trade Fulfillment -->
+        <div class="card">
+            <h2>3. Fulfill Trade</h2>
+            <div class="button-group">
+                <button id="fulfillTrade">Fulfill XRP Escrow</button>
+            </div>
+            <div id="fulfillStatus"></div>
+        </div>
+
+        <!-- Reputation -->
+        <div class="card">
+            <h2>4. Check Reputation</h2>
+            <div class="button-group">
+                <button id="checkReputation">Get Reputation Scores</button>
+            </div>
+            <div id="reputationStatus"></div>
+            <div id="reputationDisplay" class="reputation"></div>
+        </div>
+        </div>
+
+        <!-- API Documentation Tab -->
+        <div id="docs-tab" class="tab-content">
+            <div class="card api-docs">
+                <h2>📚 X-Agent Gateway API Documentation</h2>
+                
+                <div class="api-section">
+                    <h3>Overview</h3>
+                    <p>XAG is a TypeScript SDK for autonomous agents to interact with the XRP Ledger (XRPL). It provides identity management, escrow-based payments, and reputation tracking.</p>
+                    
+                    <h4>Installation</h4>
+                    <div class="code-block">npm install xrpl dotenv</div>
+
+                    <h4>Quick Start</h4>
+                    <div class="code-block">import { XAG } from './src/XAG';
+
+const xag = new XAG(); // Connects to XRPL Testnet by default
+await xag.connect();</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>Constructor</h3>
+                    <div class="method-signature">constructor(network?: string)</div>
+                    <p>Creates a new XAG instance.</p>
+                    <ul class="param-list">
+                        <li><strong>network</strong> <span class="type-badge">string</span> (optional): XRPL network URL. Default: <code>'wss://s.altnet.rippletest.net:51233'</code> (Testnet)</li>
+                    </ul>
+                    <div class="code-block">const xag = new XAG();
+// or for mainnet:
+const xag = new XAG('wss://xrplcluster.com');</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>createAgent()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;Agent&gt;</span> createAgent(config: AgentConfig)</div>
+                    <p>Creates a new agent with XLS-40 DID registration.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>config.name</strong> <span class="type-badge">string</span>: Agent name</li>
+                        <li><strong>config.type</strong> <span class="type-badge">'buyer' | 'seller' | 'supplier' | 'consumer'</span>: Agent type</li>
+                        <li><strong>config.didMethod</strong> <span class="type-badge">string</span> (optional): DID method, defaults to 'xls-40'</li>
+                        <li><strong>config.seed</strong> <span class="type-badge">string</span> (optional): Wallet seed, auto-generated if not provided</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <ul class="param-list">
+                        <li><strong>address</strong>: XRPL address</li>
+                        <li><strong>seed</strong>: Wallet seed (keep secure!)</li>
+                        <li><strong>did</strong>: Decentralized Identifier (DID)</li>
+                        <li><strong>config</strong>: Original config</li>
+                    </ul>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const agent = await xag.createAgent({
+  name: "SolarMonitor-01",
+  type: "supplier",
+  didMethod: "xls-40"
+});
+console.log(agent.did); // did:xrpl:1:r...</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>initiateTrade()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;TradeResult&gt;</span> initiateTrade(config: TradeConfig, buyerSeed?: string)</div>
+                    <p>Initiates a trade with escrow-locked payments (XRP) or direct payment (RLUSD).</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>config.buyer</strong> <span class="type-badge">string</span>: Buyer DID or address</li>
+                        <li><strong>config.seller</strong> <span class="type-badge">string</span>: Seller DID or address</li>
+                        <li><strong>config.amount</strong> <span class="type-badge">number</span>: Amount to trade</li>
+                        <li><strong>config.token</strong> <span class="type-badge">'RLUSD' | 'XRP'</span>: Token type</li>
+                        <li><strong>config.condition</strong> <span class="type-badge">string</span> (optional): Cryptographic condition</li>
+                        <li><strong>config.finishAfter</strong> <span class="type-badge">number</span> (optional): Ripple epoch timestamp for time-lock</li>
+                        <li><strong>config.cancelAfter</strong> <span class="type-badge">number</span> (optional): Ripple epoch timestamp for cancellation</li>
+                        <li><strong>config.memo</strong> <span class="type-badge">string</span> (optional): Transaction memo for auditability</li>
+                        <li><strong>buyerSeed</strong> <span class="type-badge">string</span> (optional): Buyer wallet seed</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <ul class="param-list">
+                        <li><strong>hash</strong>: Transaction hash</li>
+                        <li><strong>sequence</strong>: Transaction sequence</li>
+                        <li><strong>amount</strong>: Trade amount</li>
+                        <li><strong>token</strong>: Token type</li>
+                        <li><strong>buyer</strong>: Buyer address</li>
+                        <li><strong>seller</strong>: Seller address</li>
+                    </ul>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const settlement = await xag.initiateTrade({
+  buyer: buyerDID,
+  seller: sellerDID,
+  amount: 100,
+  token: "RLUSD",
+  condition: fulfillmentCryptoCondition,
+  memo: "Solar panel purchase"
+}, buyerAgent.seed);</div>
+
+                    <p><strong>Note:</strong> For XRP, uses native XRPL Escrow (time-locked). For RLUSD, uses Payment transaction (immediate).</p>
+                </div>
+
+                <div class="api-section">
+                    <h3>fulfillTrade()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;string&gt;</span> fulfillTrade(escrowHash: string, sellerDID: string, token?: 'RLUSD' | 'XRP', sellerSeed?: string)</div>
+                    <p>Fulfills a trade by completing an escrow (XRP) or verifying payment (RLUSD).</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>escrowHash</strong> <span class="type-badge">string</span>: Transaction hash of the escrow/payment</li>
+                        <li><strong>sellerDID</strong> <span class="type-badge">string</span>: Seller DID or address</li>
+                        <li><strong>token</strong> <span class="type-badge">'RLUSD' | 'XRP'</span> (optional): Token type, defaults to 'XRP'</li>
+                        <li><strong>sellerSeed</strong> <span class="type-badge">string</span> (optional): Seller wallet seed</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <p>Transaction hash of the fulfillment</p>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const fulfillmentHash = await xag.fulfillTrade(
+  trade.hash,
+  sellerAgent.did,
+  "XRP",
+  sellerAgent.seed
+);</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>getReputation()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;ReputationResult&gt;</span> getReputation(agentDID: string)</div>
+                    <p>Gets reputation score for an agent based on on-chain transaction history.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>agentDID</strong> <span class="type-badge">string</span>: Agent DID or address</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <ul class="param-list">
+                        <li><strong>did</strong>: Agent DID</li>
+                        <li><strong>address</strong>: XRPL address</li>
+                        <li><strong>score</strong>: Reputation score (10 points per successful trade)</li>
+                        <li><strong>successfulTrades</strong>: Total successful trades</li>
+                        <li><strong>escrowCreates</strong>: Number of successful EscrowCreate transactions</li>
+                        <li><strong>escrowFinishes</strong>: Number of successful EscrowFinish transactions</li>
+                        <li><strong>payments</strong>: Number of successful Payment transactions</li>
+                    </ul>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const score = await xag.getReputation(agentDID);
+console.log(`Reputation: ${score.score} points`);
+console.log(`Successful trades: ${score.successfulTrades}`);</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>connect() & disconnect()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;void&gt;</span> connect()</div>
+                    <div class="method-signature"><span class="return-type">Promise&lt;void&gt;</span> disconnect()</div>
+                    <p>Connects to or disconnects from the XRPL network.</p>
+                    <div class="code-block">await xag.connect();
+// ... use XAG ...
+await xag.disconnect();</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>Complete Example</h3>
+                    <div class="code-block">import { XAG } from './src/XAG';
+
+async function example() {
+  const xag = new XAG();
+  
+  try {
+    // 1. Create agents
+    const buyer = await xag.createAgent({
+      name: "AutoBuyer",
+      type: "consumer",
+      didMethod: "xls-40"
+    });
+    
+    const seller = await xag.createAgent({
+      name: "SolarSupplier",
+      type: "supplier",
+      didMethod: "xls-40"
+    });
+    
+    // 2. Initiate trade
+    const trade = await xag.initiateTrade({
+      buyer: buyer.did,
+      seller: seller.did,
+      amount: 100,
+      token: "XRP",
+      memo: "Solar panel purchase"
+    }, buyer.seed);
+    
+    // 3. Wait for time-lock (if XRP escrow)
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    
+    // 4. Fulfill trade
+    await xag.fulfillTrade(trade.hash, seller.did, "XRP", seller.seed);
+    
+    // 5. Check reputation
+    const reputation = await xag.getReputation(buyer.did);
+    console.log(`Buyer reputation: ${reputation.score}`);
+    
+  } finally {
+    await xag.disconnect();
+  }
+}</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>XRPL Features Used</h3>
+                    <ul class="param-list">
+                        <li><strong>XLS-40 DIDs</strong>: Decentralized identifiers for agent identity</li>
+                        <li><strong>Native Escrows</strong>: Time-locked XRP escrows for trustless commerce</li>
+                        <li><strong>RLUSD Payments</strong>: Stablecoin payments via TrustLines</li>
+                        <li><strong>Transaction Memos</strong>: Immutable audit trail for all transactions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            document.getElementById(tabName + '-tab-btn').classList.add('active');
+        }
+        
+        // Set up tab button listeners
+        document.getElementById('demo-tab-btn').addEventListener('click', () => switchTab('demo'));
+        document.getElementById('docs-tab-btn').addEventListener('click', () => switchTab('docs'));
+        
+        // Note: This is a frontend demo that would need a backend API
+        // For hackathon, we'll create a simple Node.js server
+        
+        let buyerAgent = null;
+        let sellerAgent = null;
+        let currentTrade = null;
+
+        function addStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            element.appendChild(statusDiv);
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function clearStatus(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        // Create Buyer Agent
+        document.getElementById('createBuyer').addEventListener('click', async () => {
+            const btn = document.getElementById('createBuyer');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Creating...';
+            clearStatus('agentStatus');
+            clearStatus('agentInfo');
+
+            try {
+                const response = await fetch('/api/create-agent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'AutoBuyer-Alpha',
+                        type: 'consumer',
+                        didMethod: 'xls-40'
+                    })
+                });
+
+                const data = await response.json();
+                buyerAgent = data;
+
+                addStatus('agentStatus', `✅ Buyer Agent Created!\nDID: ${data.did}\nAddress: ${data.address}`, 'success');
+                
+                const agentCard = document.createElement('div');
+                agentCard.className = 'agent-card';
+                agentCard.innerHTML = `
+                    <h3>Buyer Agent</h3>
+                    <p><strong>Name:</strong> ${data.config.name}</p>
+                    <p><strong>DID:</strong> ${data.did}</p>
+                    <p><strong>Address:</strong> ${data.address}</p>
+                    <a href="https://testnet.xrpl.org/accounts/${data.address}" target="_blank" class="transaction-link">View on Testnet</a>
+                `;
+                document.getElementById('agentInfo').appendChild(agentCard);
+
+            } catch (error) {
+                addStatus('agentStatus', `❌ Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Buyer Agent';
+            }
+        });
+
+        // Create Seller Agent
+        document.getElementById('createSeller').addEventListener('click', async () => {
+            const btn = document.getElementById('createSeller');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Creating...';
+            clearStatus('agentStatus');
+
+            try {
+                const response = await fetch('/api/create-agent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'SolarSupplier-One',
+                        type: 'supplier',
+                        didMethod: 'xls-40'
+                    })
+                });
+
+                const data = await response.json();
+                sellerAgent = data;
+
+                addStatus('agentStatus', `✅ Seller Agent Created!\nDID: ${data.did}\nAddress: ${data.address}`, 'success');
+                
+                const agentCard = document.createElement('div');
+                agentCard.className = 'agent-card';
+                agentCard.innerHTML = `
+                    <h3>Seller Agent</h3>
+                    <p><strong>Name:</strong> ${data.config.name}</p>
+                    <p><strong>DID:</strong> ${data.did}</p>
+                    <p><strong>Address:</strong> ${data.address}</p>
+                    <a href="https://testnet.xrpl.org/accounts/${data.address}" target="_blank" class="transaction-link">View on Testnet</a>
+                `;
+                document.getElementById('agentInfo').appendChild(agentCard);
+
+            } catch (error) {
+                addStatus('agentStatus', `❌ Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Seller Agent';
+            }
+        });
+
+        // Initiate XRP Trade
+        document.getElementById('initiateXRP').addEventListener('click', async () => {
+            if (!buyerAgent || !sellerAgent) {
+                addStatus('tradeStatus', '❌ Please create both agents first!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('initiateXRP');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Creating Escrow...';
+            clearStatus('tradeStatus');
+
+            try {
+                const rippleEpoch = 946684800;
+                const currentRippleTime = Math.floor(Date.now() / 1000) - rippleEpoch;
+                const finishAfter = currentRippleTime + 10;
+
+                const response = await fetch('/api/initiate-trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        buyer: buyerAgent.did,
+                        seller: sellerAgent.did,
+                        amount: 10,
+                        token: 'XRP',
+                        finishAfter: finishAfter,
+                        memo: 'XAG Demo: XRP Escrow Trade',
+                        buyerSeed: buyerAgent.seed
+                    })
+                });
+
+                const data = await response.json();
+                currentTrade = data;
+
+                addStatus('tradeStatus', `✅ XRP Escrow Created!\nHash: ${data.hash}\nAmount: ${data.amount} XRP`, 'success');
+                addStatus('tradeStatus', `\n⏳ Waiting 10 seconds for time-lock...`, 'info');
+
+                setTimeout(() => {
+                    addStatus('tradeStatus', `\n✅ Time-lock expired! Ready to fulfill.`, 'success');
+                }, 10000);
+
+            } catch (error) {
+                addStatus('tradeStatus', `❌ Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Initiate XRP Escrow Trade';
+            }
+        });
+
+        // Fulfill Trade
+        document.getElementById('fulfillTrade').addEventListener('click', async () => {
+            if (!currentTrade || !sellerAgent) {
+                addStatus('fulfillStatus', '❌ Please initiate a trade first!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('fulfillTrade');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Fulfilling...';
+            clearStatus('fulfillStatus');
+
+            try {
+                const response = await fetch('/api/fulfill-trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        escrowHash: currentTrade.hash,
+                        sellerDID: sellerAgent.did,
+                        token: 'XRP',
+                        sellerSeed: sellerAgent.seed
+                    })
+                });
+
+                const data = await response.json();
+
+                addStatus('fulfillStatus', `✅ Trade Fulfilled!\nHash: ${data.hash}`, 'success');
+                addStatus('fulfillStatus', `\n🔗 View on Testnet: https://testnet.xrpl.org/transactions/${data.hash}`, 'info');
+
+            } catch (error) {
+                addStatus('fulfillStatus', `❌ Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Fulfill XRP Escrow';
+            }
+        });
+
+        // Check Reputation
+        document.getElementById('checkReputation').addEventListener('click', async () => {
+            if (!buyerAgent || !sellerAgent) {
+                addStatus('reputationStatus', '❌ Please create agents first!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('checkReputation');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Checking...';
+            clearStatus('reputationStatus');
+            clearStatus('reputationDisplay');
+
+            try {
+                const [buyerRep, sellerRep] = await Promise.all([
+                    fetch(`/api/reputation/${encodeURIComponent(buyerAgent.did)}`).then(r => r.json()),
+                    fetch(`/api/reputation/${encodeURIComponent(sellerAgent.did)}`).then(r => r.json())
+                ]);
+
+                const buyerDiv = document.createElement('div');
+                buyerDiv.className = 'reputation-item';
+                buyerDiv.innerHTML = `
+                    <h3>${buyerAgent.config.name}</h3>
+                    <div class="score">${buyerRep.score}</div>
+                    <p>Points</p>
+                    <p>Successful Trades: ${buyerRep.successfulTrades}</p>
+                `;
+
+                const sellerDiv = document.createElement('div');
+                sellerDiv.className = 'reputation-item';
+                sellerDiv.innerHTML = `
+                    <h3>${sellerAgent.config.name}</h3>
+                    <div class="score">${sellerRep.score}</div>
+                    <p>Points</p>
+                    <p>Successful Trades: ${sellerRep.successfulTrades}</p>
+                `;
+
+                document.getElementById('reputationDisplay').appendChild(buyerDiv);
+                document.getElementById('reputationDisplay').appendChild(sellerDiv);
+
+                addStatus('reputationStatus', '✅ Reputation fetched successfully!', 'success');
+
+            } catch (error) {
+                addStatus('reputationStatus', `❌ Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Get Reputation Scores';
+            }
+        });
+    </script>
+</body>
+</html>
+

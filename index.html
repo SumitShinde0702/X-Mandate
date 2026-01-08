@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-Mandate | Infrastructure for the Autonomous Agent Economy</title>
+    <meta name="description" content="X-Mandate: Trust & Settlement Infrastructure for AI Agents. Built on XRPL. Native DIDs, Escrows, and RLUSD for machine-to-machine commerce.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #0f3460;
+            --highlight: #00d4ff;
+            --text: #e4e4e4;
+            --text-muted: #a0a0a0;
+            --success: #00ff88;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        header {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--highlight);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 6rem 0;
+            text-align: center;
+            background: radial-gradient(ellipse at center, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: clamp(1.2rem, 2vw, 1.5rem);
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero .tagline {
+            font-size: 1.1rem;
+            color: var(--highlight);
+            margin-bottom: 3rem;
+            font-weight: 600;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: var(--text);
+            color: var(--primary);
+        }
+
+        /* Stats Section */
+        .stats {
+            background: var(--secondary);
+            padding: 4rem 0;
+            margin: 4rem 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .stat-source {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Problem Section */
+        .problem {
+            padding: 6rem 0;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .problem-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 2rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--highlight);
+        }
+
+        .problem-card h3 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        /* Solution Section */
+        .solution {
+            background: var(--secondary);
+            padding: 6rem 0;
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .solution-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .solution-card:hover {
+            border-color: var(--highlight);
+            transform: translateY(-5px);
+        }
+
+        .solution-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .solution-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--highlight);
+        }
+
+        /* Infrastructure Focus */
+        .infra-focus {
+            padding: 6rem 0;
+            background: radial-gradient(ellipse at center, rgba(118, 75, 162, 0.1) 0%, transparent 70%);
+        }
+
+        .infra-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .infra-content p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+        }
+
+        .infra-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .infra-feature {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .infra-feature strong {
+            color: var(--highlight);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Tech Stack */
+        .tech-stack {
+            background: var(--secondary);
+            padding: 6rem 0;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .tech-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .tech-card h4 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        /* Use Cases */
+        .use-cases {
+            padding: 6rem 0;
+        }
+
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .use-case-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 2rem;
+            border-radius: 12px;
+            border-top: 3px solid var(--highlight);
+        }
+
+        .use-case-card h3 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--gradient);
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            padding: 3rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--highlight);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 4rem 0;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">X-Mandate</div>
+            <ul class="nav-links">
+                <li><a href="/demo">Demo</a></li>
+                <li><a href="https://github.com/SumitShinde0702/X-Mandate" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Infrastructure for the<br>Autonomous Agent Economy</h1>
+            <p class="subtitle">The trust & settlement middleware that enables AI agents, IoT devices, and autonomous systems to transact securely on the XRP Ledger.</p>
+            <p class="tagline">Built on Native XRPL. No Workarounds. Just Infrastructure.</p>
+            <div class="cta-buttons">
+                <a href="/demo" class="btn btn-primary">Try Demo</a>
+                <a href="https://github.com/SumitShinde0702/X-Mandate" class="btn btn-secondary" target="_blank">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="container">
+            <h2 class="section-title">The Infrastructure Gap is Real</h2>
+            <div class="stats-grid">
+                <div class="stat-card fade-in">
+                    <div class="stat-number">$50B+</div>
+                    <div class="stat-label">Agentic AI Market Size</div>
+                    <div class="stat-source">Projected by 2025</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-number">&lt;$0.0002</div>
+                    <div class="stat-label">Per Transaction Cost</div>
+                    <div class="stat-source">XRPL Native Fees</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-number">1,500+</div>
+                    <div class="stat-label">Transactions Per Second</div>
+                    <div class="stat-source">XRPL Throughput</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-number">Carbon Neutral</div>
+                    <div class="stat-label">XRPL Ledger</div>
+                    <div class="stat-source">Verified by UN SDGs</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="problem" id="infrastructure">
+        <div class="container">
+            <h2 class="section-title">The Problem We're Solving</h2>
+            <p class="section-subtitle">As we move toward an Agent-to-Agent (A2A) economy, machines need more than intelligence—they need financial identity and trustless settlement infrastructure.</p>
+            
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <h3>No Financial Identity</h3>
+                    <p>AI agents and autonomous systems lack persistent, verifiable identities. They can't build reputation or establish trust across platforms.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>The Handshake Problem</h3>
+                    <p>How do two autonomous agents trust each other to complete a transaction? Without infrastructure, it's impossible to guarantee settlement.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>No Settlement Layer</h3>
+                    <p>Existing payment rails weren't built for machine-to-machine commerce. High fees, slow settlement, and centralization create friction.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="solution" id="solution">
+        <div class="container">
+            <h2 class="section-title">Infrastructure, Not a Product</h2>
+            <p class="section-subtitle">X-Mandate is middleware infrastructure. Think of us as "Plaid for Agents"—the foundational layer that enables autonomous commerce.</p>
+            
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="solution-icon">🆔</div>
+                    <h3>Native Identity (XLS-40 DIDs)</h3>
+                    <p>Every agent gets a native XRPL Decentralized Identifier. No central authority. Agents carry their reputation across platforms, building trust over time.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">🔒</div>
+                    <h3>Trustless Settlement (Native Escrows)</h3>
+                    <p>Funds are locked in XRPL Escrows until fulfillment. Cryptographic proof or time-locks ensure agents can't cheat. It's trustless by design.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">💵</div>
+                    <h3>Stable Settlement (RLUSD)</h3>
+                    <p>All commerce settles in RLUSD—Ripple's 1:1 USD-backed stablecoin. Price stability for business operations, sub-penny transaction costs.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">📊</div>
+                    <h3>On-Chain Reputation</h3>
+                    <p>Reputation scores are calculated from on-chain history. Successful escrow completions, payment history, and transaction memos create an immutable audit trail.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">🌐</div>
+                    <h3>Carbon Neutral</h3>
+                    <p>Built on XRPL's carbon-neutral ledger. Every transaction is verified without the environmental cost of proof-of-work systems.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">⚡</div>
+                    <h3>Sub-Second Settlement</h3>
+                    <p>XRPL finalizes transactions in 3-5 seconds. For autonomous agents operating at machine speed, this is real-time infrastructure.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="infra-focus">
+        <div class="container">
+            <div class="infra-content">
+                <h2 class="section-title">Why Infrastructure Matters</h2>
+                <p>We're not building another app. We're building the infrastructure layer that will power the autonomous agent economy.</p>
+                <p>Just as AWS provides compute infrastructure and Stripe provides payment infrastructure, X-Mandate provides <strong>trust & settlement infrastructure</strong> for machines.</p>
+                <p>This is foundational. Without it, the $50B+ agentic AI market can't reach its potential because agents can't transact with each other.</p>
+                
+                <div class="infra-features">
+                    <div class="infra-feature">
+                        <strong>Native XRPL</strong>
+                        No off-chain workarounds. We use XLS-40 DIDs, Native Escrows, and RLUSD exactly as designed.
+                    </div>
+                    <div class="infra-feature">
+                        <strong>Lightweight SDK</strong>
+                        Integrate in minutes, not months. Our SDK abstracts complexity while maintaining full XRPL compatibility.
+                    </div>
+                    <div class="infra-feature">
+                        <strong>Developer First</strong>
+                        Built for developers building autonomous systems. Clear APIs, comprehensive docs, real examples.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tech-stack" id="tech">
+        <div class="container">
+            <h2 class="section-title">Built on Native XRPL Protocols</h2>
+            <p class="section-subtitle">We don't reinvent the wheel. We leverage XRPL's battle-tested infrastructure.</p>
+            
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4>XLS-40 DIDs</h4>
+                    <p>Native Decentralized Identifiers for agent identity and reputation portability.</p>
+                </div>
+                <div class="tech-card">
+                    <h4>Native Escrows</h4>
+                    <p>Trustless conditional payments with cryptographic fulfillment or time-locks.</p>
+                </div>
+                <div class="tech-card">
+                    <h4>RLUSD Stablecoin</h4>
+                    <p>1:1 USD-backed stablecoin for price-stable machine-to-machine commerce.</p>
+                </div>
+                <div class="tech-card">
+                    <h4>Transaction Memos</h4>
+                    <p>Immutable audit trail for A2A negotiations and intent anchoring.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="use-cases">
+        <div class="container">
+            <h2 class="section-title">Real-World Infrastructure Use Cases</h2>
+            <p class="section-subtitle">Where autonomous agents need financial infrastructure today.</p>
+            
+            <div class="use-case-grid">
+                <div class="use-case-card">
+                    <h3>Autonomous Supply Chains</h3>
+                    <p>IoT sensors verify delivery and automatically release payment via escrow. No human intervention. No disputes. Just infrastructure working.</p>
+                </div>
+                <div class="use-case-card">
+                    <h3>Decentralized Micro-Grids</h3>
+                    <p>Community solar grids use agents to buy and sell energy. X-Mandate provides the settlement layer that makes peer-to-peer energy markets possible.</p>
+                </div>
+                <div class="use-case-card">
+                    <h3>AI Agent Marketplaces</h3>
+                    <p>Specialized AI agents offer services to other agents. X-Mandate enables reputation-based discovery and trustless payment settlement.</p>
+                </div>
+                <div class="use-case-card">
+                    <h3>Sustainable Supply Verification</h3>
+                    <p>Agents verify "Green Credentials" before settling payments. XRPL's carbon-neutral ledger aligns with UN SDG 12 (Responsible Consumption).</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section" id="docs">
+        <div class="container">
+            <h2>Ready to Build on Infrastructure?</h2>
+            <p>Start integrating X-Mandate into your autonomous systems today.</p>
+            <div class="cta-buttons">
+                <a href="/demo" class="btn btn-primary">Try Demo</a>
+                <a href="https://github.com/SumitShinde0702/X-Mandate" class="btn btn-secondary" target="_blank">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="/demo">Demo</a>
+                <a href="https://github.com/SumitShinde0702/X-Mandate" target="_blank">GitHub</a>
+            </div>
+            <p>&copy; 2024 X-Mandate. Infrastructure for the Autonomous Agent Economy.</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">Built on XRPL. Aligned with UN SDGs. Open Source.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Fade in on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.stat-card, .problem-card, .solution-card, .use-case-card').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
+

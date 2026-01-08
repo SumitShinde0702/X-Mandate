@@ -9,14 +9,20 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from frontend directory (using process.cwd() for ts-node compatibility)
 const frontendPath = path.join(process.cwd(), 'frontend');
-app.use(express.static(frontendPath));
 
-// Serve index.html at root
+// Serve landing page at root FIRST (before static middleware)
 app.get('/', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'index.html'));
+});
+
+// Serve demo at /demo
+app.get('/demo', (req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
+
+// Serve static files from frontend directory (but NOT index.html - we handle that above)
+app.use('/static', express.static(frontendPath));
 
 const xag = new XAG();
 
@@ -62,6 +68,40 @@ app.get('/api/reputation/:did', async (req, res) => {
   try {
     const reputation = await xag.getReputation(req.params.did);
     res.json(reputation);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/log', async (req, res) => {
+  try {
+    const { message, level, agentDID, agentSeed } = req.body;
+    if (!message || !agentDID) {
+      return res.status(400).json({ error: 'Message and agentDID are required' });
+    }
+    const hash = await xag.log(message, level || 'info', agentDID, agentSeed);
+    res.json({ hash, message, level: level || 'info' });
+  } catch (error: any) {
+    console.error('Log error:', error);
+    res.status(500).json({ error: error.message || 'Failed to log to blockchain' });
+  }
+});
+
+app.get('/api/logs/:did', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 50;
+    const logs = await xag.getLogs(req.params.did, limit);
+    res.json(logs);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/history/:did', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 50;
+    const history = await xag.getTransactionHistory(req.params.did, limit);
+    res.json(history);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

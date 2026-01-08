@@ -1,4 +1,4 @@
-import { Client, Wallet } from 'xrpl';
+import { Client, Wallet, Payment, Memo, xrpToDrops } from 'xrpl';
 import { AgentConfig, Agent, TradeConfig, TradeResult, ReputationResult } from './types';
 import { DIDManager } from './identity/DIDManager';
 import { EscrowManager } from './escrow/EscrowManager';
@@ -237,5 +237,161 @@ export class XAG {
     console.log(`   Reputation Score: ${result.score}`);
 
     return result;
+  }
+
+  /**
+   * Logs a message to the blockchain using XRPL Transaction Memos
+   * Creates an immutable audit trail for A2A communication
+   * @example
+   * await xag.log("Agent interaction started", "info", agentDID, agentSeed);
+   */
+  async log(
+    message: string,
+    level: 'info' | 'success' | 'warn' | 'error' = 'info',
+    agentDID: string,
+    agentSeed?: string
+  ): Promise<string> {
+    await this.connect();
+
+    // Get agent wallet
+    let agentWallet: Wallet;
+    try {
+      agentWallet = this.getWalletFromDID(agentDID, agentSeed);
+    } catch (error) {
+      throw new Error(`Agent wallet not found. Please create agent first or provide agentSeed. ${error}`);
+    }
+
+    // Use Payment to a known sink address with memos - simple and avoids redundancy!
+    // Each memo is unique, so no redundant transaction errors
+    const logData = {
+      message,
+      level,
+      timestamp: new Date().toISOString(),
+      agent: agentDID
+    };
+    
+    // Known XRPL sink address (burn address) - perfect for logging
+    const SINK_ADDRESS = 'rrrrrrrrrrrrrrrrrrrrBZbvji';
+    
+    const paymentTx: Payment = {
+      TransactionType: 'Payment',
+      Account: agentWallet.address,
+      Destination: SINK_ADDRESS, // Send to sink address (burn)
+      Amount: xrpToDrops('0.000001'), // Minimum amount (1 drop)
+      Memos: [{
+        Memo: {
+          MemoData: Buffer.from(JSON.stringify(logData)).toString('hex'),
+          MemoType: Buffer.from('application/json').toString('hex')
+        }
+      }]
+    };
+
+    try {
+      const prepared = await this.client.autofill(paymentTx);
+      const signed = agentWallet.sign(prepared);
+      const result = await this.client.submitAndWait(signed.tx_blob);
+
+      const txHash = result.result.hash as string;
+      console.log(`\n📝 Logged to blockchain [${level.toUpperCase()}]`);
+      console.log(`   Message: ${message}`);
+      console.log(`   Transaction Hash: ${txHash}`);
+      console.log(`   View on Testnet: https://testnet.xrpl.org/transactions/${txHash}`);
+
+      return txHash;
+    } catch (error: any) {
+      throw new Error(`Failed to log to blockchain: ${error.message || error}`);
+    }
+  }
+
+  /**
+   * Retrieves logs from blockchain for an agent
+   * Parses transaction memos to extract log entries
+   */
+  async getLogs(agentDID: string, limit: number = 50): Promise<Array<{
+    message: string;
+    level: string;
+    timestamp: string;
+    txHash: string;
+  }>> {
+    await this.connect();
+
+    const address = this.didManager.resolveDID(agentDID);
+    
+    const accountTx = await this.client.request({
+      command: 'account_tx',
+      account: address,
+      limit: limit
+    });
+
+    const logs: Array<{
+      message: string;
+      level: string;
+      timestamp: string;
+      txHash: string;
+    }> = [];
+
+    const transactions = accountTx.result.transactions || [];
+    
+    for (const tx of transactions) {
+      const txData: any = tx.tx || tx.tx_json || {};
+      const memos = txData.Memos || [];
+      
+      for (const memo of memos) {
+        try {
+          const memoData = (memo as any).Memo?.MemoData;
+          if (memoData) {
+            const decoded = Buffer.from(memoData, 'hex').toString('utf-8');
+            const logData = JSON.parse(decoded);
+            
+            // Check if it's a log entry (has message and level)
+            if (logData.message && logData.level) {
+              logs.push({
+                message: logData.message,
+                level: logData.level,
+                timestamp: logData.timestamp || new Date().toISOString(),
+                txHash: txData.hash || (tx as any).hash || ''
+              });
+            }
+          }
+        } catch (error) {
+          // Skip invalid memos
+          continue;
+        }
+      }
+    }
+
+    // Sort by timestamp (newest first)
+    logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    return logs;
+  }
+
+  /**
+   * Gets transaction history for an agent
+   */
+  async getTransactionHistory(agentDID: string, limit: number = 50): Promise<Array<{
+    hash: string;
+    type: string;
+    result: string;
+    timestamp?: string;
+  }>> {
+    await this.connect();
+
+    const address = this.didManager.resolveDID(agentDID);
+    
+    const accountTx = await this.client.request({
+      command: 'account_tx',
+      account: address,
+      limit: limit
+    });
+
+    const transactions = accountTx.result.transactions || [];
+    
+    return transactions.map((tx: any) => ({
+      hash: tx.tx?.hash || tx.hash || '',
+      type: tx.tx?.TransactionType || tx.tx_json?.TransactionType || 'Unknown',
+      result: tx.meta?.TransactionResult || 'Unknown',
+      timestamp: tx.tx?.date ? new Date((tx.tx.date + 946684800) * 1000).toISOString() : undefined
+    }));
   }
 }

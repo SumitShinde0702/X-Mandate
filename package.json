@@ -9,8 +9,8 @@
     "demo": "ts-node examples/demo.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "server": "ts-node server.ts",
-    "dev": "ts-node server.ts"
+    "server": "nodemon --exec ts-node server.ts",
+    "dev": "nodemon --exec ts-node server.ts"
   },
   "repository": {
     "type": "git",
@@ -34,6 +34,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.3",
+    "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"

@@ -145,6 +145,149 @@ console.log(`Successful trades: ${score.successfulTrades}`);
 
 ---
 
+##### `log(message: string, level?: 'info' | 'success' | 'warn' | 'error', agentDID: string, agentSeed?: string): Promise<string>`
+Logs a message to the blockchain using XRPL Transaction Memos. Creates an immutable audit trail for A2A communication.
+
+**Parameters:**
+- `message`: Log message (string)
+- `level`: Log level - `'info' | 'success' | 'warn' | 'error'` (optional, defaults to 'info')
+- `agentDID`: Agent DID or address (string)
+- `agentSeed`: Agent wallet seed (optional if agent was created via XAG)
+
+**Returns:** `Promise<string>` - Transaction hash
+
+**Example:**
+```typescript
+// Log agent interaction
+await xag.log("Agent interaction started", "info", agent.did, agent.seed);
+await xag.log("Trade completed successfully", "success", agent.did, agent.seed);
+await xag.log("Warning: Low balance", "warn", agent.did, agent.seed);
+```
+
+**Note:** Uses XRPL Transaction Memos to store log data. Creates a minimal self-payment transaction (1 drop = 0.000001 XRP) to ensure the log is permanently recorded on-chain.
+
+---
+
+##### `getLogs(agentDID: string, limit?: number): Promise<Array<LogEntry>>`
+Retrieves logs from blockchain for an agent by parsing transaction memos.
+
+**Parameters:**
+- `agentDID`: Agent DID or address (string)
+- `limit`: Maximum number of logs to retrieve (optional, defaults to 50)
+
+**Returns:** `Promise<Array<LogEntry>>`
+- `message`: Log message
+- `level`: Log level
+- `timestamp`: ISO timestamp
+- `txHash`: Transaction hash
+
+**Example:**
+```typescript
+const logs = await xag.getLogs(agent.did, 20);
+logs.forEach(log => {
+  console.log(`[${log.level}] ${log.message} - ${log.timestamp}`);
+});
+```
+
+---
+
+##### `getTransactionHistory(agentDID: string, limit?: number): Promise<Array<Transaction>>`
+Gets transaction history for an agent.
+
+**Parameters:**
+- `agentDID`: Agent DID or address (string)
+- `limit`: Maximum number of transactions (optional, defaults to 50)
+
+**Returns:** `Promise<Array<Transaction>>`
+- `hash`: Transaction hash
+- `type`: Transaction type
+- `result`: Transaction result
+- `timestamp`: ISO timestamp (if available)
+
+**Example:**
+```typescript
+const history = await xag.getTransactionHistory(agent.did);
+history.forEach(tx => {
+  console.log(`${tx.type}: ${tx.result} - ${tx.hash}`);
+});
+```
+
+---
+
+##### `log(message: string, level?: 'info' | 'success' | 'warn' | 'error', agentDID: string, agentSeed?: string): Promise<string>`
+Logs a message to the blockchain using XRPL Transaction Memos. Creates an immutable audit trail for A2A communication.
+
+**Parameters:**
+- `message`: Log message (string)
+- `level`: Log level - `'info' | 'success' | 'warn' | 'error'` (optional, defaults to 'info')
+- `agentDID`: Agent DID or address (string)
+- `agentSeed`: Agent wallet seed (optional if agent was created via XAG)
+
+**Returns:** `Promise<string>` - Transaction hash
+
+**Example:**
+```typescript
+// Log agent interaction
+await xag.log("Agent interaction started", "info", agent.did, agent.seed);
+await xag.log("Trade completed successfully", "success", agent.did, agent.seed);
+await xag.log("Warning: Low balance", "warn", agent.did, agent.seed);
+await xag.log("Error: Connection failed", "error", agent.did, agent.seed);
+```
+
+**Note:** Uses XRPL Transaction Memos to store log data. Creates a Payment transaction to a sink address (1 drop = 0.000001 XRP) to ensure the log is permanently recorded on-chain. Each log entry is unique and cannot be rejected as redundant.
+
+---
+
+##### `getLogs(agentDID: string, limit?: number): Promise<Array<LogEntry>>`
+Retrieves logs from blockchain for an agent by parsing transaction memos.
+
+**Parameters:**
+- `agentDID`: Agent DID or address (string)
+- `limit`: Maximum number of logs to retrieve (optional, defaults to 50)
+
+**Returns:** `Promise<Array<LogEntry>>`
+- `message`: Log message
+- `level`: Log level
+- `timestamp`: ISO timestamp
+- `txHash`: Transaction hash
+
+**Example:**
+```typescript
+const logs = await xag.getLogs(agent.did, 20);
+logs.forEach(log => {
+  console.log(`[${log.level}] ${log.message} - ${log.timestamp}`);
+  console.log(`Transaction: ${log.txHash}`);
+});
+```
+
+---
+
+##### `getTransactionHistory(agentDID: string, limit?: number): Promise<Array<Transaction>>`
+Gets transaction history for an agent.
+
+**Parameters:**
+- `agentDID`: Agent DID or address (string)
+- `limit`: Maximum number of transactions (optional, defaults to 50)
+
+**Returns:** `Promise<Array<Transaction>>`
+- `hash`: Transaction hash
+- `type`: Transaction type (e.g., 'Payment', 'EscrowCreate', 'EscrowFinish')
+- `result`: Transaction result (e.g., 'tesSUCCESS')
+- `timestamp`: ISO timestamp (if available)
+
+**Example:**
+```typescript
+const history = await xag.getTransactionHistory(agent.did, 100);
+history.forEach(tx => {
+  console.log(`${tx.type}: ${tx.result} - ${tx.hash}`);
+  if (tx.timestamp) {
+    console.log(`Time: ${tx.timestamp}`);
+  }
+});
+```
+
+---
+
 ##### `connect(): Promise<void>`
 Connects to the XRPL network.
 
@@ -211,6 +354,26 @@ interface ReputationResult {
   escrowCreates: number;
   escrowFinishes: number;
   payments: number;
+}
+```
+
+### `LogEntry`
+```typescript
+interface LogEntry {
+  message: string;
+  level: 'info' | 'success' | 'warn' | 'error';
+  timestamp: string;
+  txHash: string;
+}
+```
+
+### `Transaction`
+```typescript
+interface Transaction {
+  hash: string;
+  type: string;
+  result: string;
+  timestamp?: string;
 }
 ```
 

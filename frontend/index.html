@@ -105,11 +105,21 @@
             border: 1px solid #f5c6cb;
         }
 
-        .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
+         .status.info {
+             background: #d1ecf1;
+             color: #0c5460;
+             border: 1px solid #bee5eb;
+         }
+
+         .status.info a {
+             color: #0c5460;
+             text-decoration: underline;
+             font-weight: bold;
+         }
+
+         .status.info a:hover {
+             color: #667eea;
+         }
 
         .agent-info {
             display: grid;
@@ -261,17 +271,19 @@
             font-size: 1.1em;
         }
 
-        .code-block {
-            background: #2d2d2d;
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-        }
+         .code-block {
+             background: #2d2d2d;
+             color: #f8f8f2;
+             padding: 15px;
+             border-radius: 8px;
+             overflow-x: auto;
+             margin: 10px 0;
+             font-family: 'Courier New', monospace;
+             font-size: 14px;
+             line-height: 1.6;
+             white-space: pre-wrap;
+             word-wrap: break-word;
+         }
 
         .param-list {
             list-style: none;
@@ -319,7 +331,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 X-Agent Gateway (XAG)</h1>
+            <h1>🚀 X-Mandate</h1>
             <p>Trust & Settlement Middleware for Autonomous Agents</p>
         </div>
 
@@ -361,16 +373,44 @@
             <div id="fulfillStatus"></div>
         </div>
 
-        <!-- Reputation -->
-        <div class="card">
-            <h2>4. Check Reputation</h2>
-            <div class="button-group">
-                <button id="checkReputation">Get Reputation Scores</button>
-            </div>
-            <div id="reputationStatus"></div>
-            <div id="reputationDisplay" class="reputation"></div>
-        </div>
-        </div>
+         <!-- Reputation -->
+         <div class="card">
+             <h2>4. Check Reputation</h2>
+             <div class="button-group">
+                 <button id="checkReputation">Get Reputation Scores</button>
+             </div>
+             <div id="reputationStatus"></div>
+             <div id="reputationDisplay" class="reputation"></div>
+         </div>
+
+         <!-- Blockchain Logging -->
+         <div class="card">
+             <h2>5. Blockchain Logging</h2>
+             <p style="margin-bottom: 15px; color: #666;">Log messages to the XRPL blockchain for immutable audit trails</p>
+             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                 <input type="text" id="logMessage" placeholder="Enter log message..." style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                 <select id="logLevel" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                     <option value="info">Info</option>
+                     <option value="success">Success</option>
+                     <option value="warn">Warning</option>
+                     <option value="error">Error</option>
+                 </select>
+                 <button id="logToBlockchain">Log to Blockchain</button>
+             </div>
+             <div id="logStatus"></div>
+         </div>
+
+         <!-- Activity Feed -->
+         <div class="card">
+             <h2>6. Activity Feed & Transaction History</h2>
+             <div class="button-group">
+                 <button id="loadActivity">Load Activity Feed</button>
+                 <button id="loadHistory">Load Transaction History</button>
+             </div>
+             <div id="activityStatus"></div>
+             <div id="activityFeed" style="max-height: 400px; overflow-y: auto; margin-top: 15px;"></div>
+         </div>
+         </div>
 
         <!-- API Documentation Tab -->
         <div id="docs-tab" class="tab-content">
@@ -527,6 +567,87 @@ console.log(`Successful trades: ${score.successfulTrades}`);</div>
                 </div>
 
                 <div class="api-section">
+                    <h3>log()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;string&gt;</span> log(message: string, level?: 'info' | 'success' | 'warn' | 'error', agentDID: string, agentSeed?: string)</div>
+                    <p>Logs a message to the blockchain using XRPL Transaction Memos. Creates an immutable audit trail for A2A communication.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>message</strong> <span class="type-badge">string</span>: Log message</li>
+                        <li><strong>level</strong> <span class="type-badge">'info' | 'success' | 'warn' | 'error'</span> (optional): Log level, defaults to 'info'</li>
+                        <li><strong>agentDID</strong> <span class="type-badge">string</span>: Agent DID or address</li>
+                        <li><strong>agentSeed</strong> <span class="type-badge">string</span> (optional): Agent wallet seed</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <p>Transaction hash of the log entry</p>
+
+                    <h4>Example</h4>
+                    <div class="code-block">await xag.log("Agent interaction started", "info", agent.did, agent.seed);
+await xag.log("Trade completed successfully", "success", agent.did, agent.seed);
+await xag.log("Warning: Low balance", "warn", agent.did, agent.seed);
+await xag.log("Error: Connection failed", "error", agent.did, agent.seed);</div>
+
+                    <p><strong>Note:</strong> Uses XRPL Transaction Memos to store log data. Creates a Payment transaction to a sink address (1 drop = 0.000001 XRP) to ensure the log is permanently recorded on-chain.</p>
+                </div>
+
+                <div class="api-section">
+                    <h3>getLogs()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;Array&lt;LogEntry&gt;&gt;</span> getLogs(agentDID: string, limit?: number)</div>
+                    <p>Retrieves logs from blockchain for an agent by parsing transaction memos.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>agentDID</strong> <span class="type-badge">string</span>: Agent DID or address</li>
+                        <li><strong>limit</strong> <span class="type-badge">number</span> (optional): Maximum number of logs, defaults to 50</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <ul class="param-list">
+                        <li><strong>message</strong>: Log message</li>
+                        <li><strong>level</strong>: Log level</li>
+                        <li><strong>timestamp</strong>: ISO timestamp</li>
+                        <li><strong>txHash</strong>: Transaction hash</li>
+                    </ul>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const logs = await xag.getLogs(agent.did, 20);
+logs.forEach(log => {
+  console.log(`[${log.level}] ${log.message} - ${log.timestamp}`);
+  console.log(`Transaction: ${log.txHash}`);
+});</div>
+                </div>
+
+                <div class="api-section">
+                    <h3>getTransactionHistory()</h3>
+                    <div class="method-signature"><span class="return-type">Promise&lt;Array&lt;Transaction&gt;&gt;</span> getTransactionHistory(agentDID: string, limit?: number)</div>
+                    <p>Gets transaction history for an agent.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul class="param-list">
+                        <li><strong>agentDID</strong> <span class="type-badge">string</span>: Agent DID or address</li>
+                        <li><strong>limit</strong> <span class="type-badge">number</span> (optional): Maximum number of transactions, defaults to 50</li>
+                    </ul>
+
+                    <h4>Returns</h4>
+                    <ul class="param-list">
+                        <li><strong>hash</strong>: Transaction hash</li>
+                        <li><strong>type</strong>: Transaction type (e.g., 'Payment', 'EscrowCreate')</li>
+                        <li><strong>result</strong>: Transaction result (e.g., 'tesSUCCESS')</li>
+                        <li><strong>timestamp</strong>: ISO timestamp (if available)</li>
+                    </ul>
+
+                    <h4>Example</h4>
+                    <div class="code-block">const history = await xag.getTransactionHistory(agent.did, 100);
+history.forEach(tx => {
+  console.log(`${tx.type}: ${tx.result} - ${tx.hash}`);
+  if (tx.timestamp) {
+    console.log(`Time: ${tx.timestamp}`);
+  }
+});</div>
+                </div>
+
+                <div class="api-section">
                     <h3>connect() & disconnect()</h3>
                     <div class="method-signature"><span class="return-type">Promise&lt;void&gt;</span> connect()</div>
                     <div class="method-signature"><span class="return-type">Promise&lt;void&gt;</span> disconnect()</div>
@@ -572,14 +693,32 @@ async function example() {
     // 4. Fulfill trade
     await xag.fulfillTrade(trade.hash, seller.did, "XRP", seller.seed);
     
-    // 5. Check reputation
-    const reputation = await xag.getReputation(buyer.did);
-    console.log(`Buyer reputation: ${reputation.score}`);
-    
-  } finally {
-    await xag.disconnect();
-  }
-}</div>
+     // 5. Log agent interaction
+     await xag.log("Trade initiated", "info", buyer.did, buyer.seed);
+     
+     // 6. Wait for time-lock (if XRP escrow)
+     await new Promise(resolve => setTimeout(resolve, 10000));
+     
+     // 7. Fulfill trade
+     await xag.fulfillTrade(trade.hash, seller.did, "XRP", seller.seed);
+     await xag.log("Trade fulfilled successfully", "success", seller.did, seller.seed);
+     
+     // 8. Check reputation
+     const reputation = await xag.getReputation(buyer.did);
+     console.log(`Buyer reputation: ${reputation.score}`);
+     
+     // 9. Retrieve logs
+     const logs = await xag.getLogs(buyer.did, 10);
+     console.log(`Recent logs: ${logs.length}`);
+     
+     // 10. View transaction history
+     const history = await xag.getTransactionHistory(buyer.did, 20);
+     console.log(`Transaction history: ${history.length} transactions`);
+     
+   } finally {
+     await xag.disconnect();
+   }
+ }</div>
                 </div>
 
                 <div class="api-section">
@@ -754,8 +893,15 @@ async function example() {
                 const data = await response.json();
                 currentTrade = data;
 
-                addStatus('tradeStatus', `✅ XRP Escrow Created!\nHash: ${data.hash}\nAmount: ${data.amount} XRP`, 'success');
-                addStatus('tradeStatus', `\n⏳ Waiting 10 seconds for time-lock...`, 'info');
+                 addStatus('tradeStatus', `✅ XRP Escrow Created!\nHash: ${data.hash}\nAmount: ${data.amount} XRP`, 'success');
+                 
+                 // Add clickable link for escrow
+                 const escrowLinkDiv = document.createElement('div');
+                 escrowLinkDiv.className = 'status info';
+                 escrowLinkDiv.innerHTML = `<a href="https://testnet.xrpl.org/transactions/${data.hash}" target="_blank" style="color: #0c5460; text-decoration: underline; font-weight: bold;">🔗 View Escrow on Testnet: ${data.hash.substring(0, 20)}...</a>`;
+                 document.getElementById('tradeStatus').appendChild(escrowLinkDiv);
+                 
+                 addStatus('tradeStatus', `\n⏳ Waiting 10 seconds for time-lock...`, 'info');
 
                 setTimeout(() => {
                     addStatus('tradeStatus', `\n✅ Time-lock expired! Ready to fulfill.`, 'success');
@@ -795,8 +941,13 @@ async function example() {
 
                 const data = await response.json();
 
-                addStatus('fulfillStatus', `✅ Trade Fulfilled!\nHash: ${data.hash}`, 'success');
-                addStatus('fulfillStatus', `\n🔗 View on Testnet: https://testnet.xrpl.org/transactions/${data.hash}`, 'info');
+                 addStatus('fulfillStatus', `✅ Trade Fulfilled!\nHash: ${data.hash}`, 'success');
+                 
+                 // Add clickable link
+                 const linkDiv = document.createElement('div');
+                 linkDiv.className = 'status info';
+                 linkDiv.innerHTML = `<a href="https://testnet.xrpl.org/transactions/${data.hash}" target="_blank" style="color: #0c5460; text-decoration: underline; font-weight: bold;">🔗 View on Testnet: ${data.hash}</a>`;
+                 document.getElementById('fulfillStatus').appendChild(linkDiv);
 
             } catch (error) {
                 addStatus('fulfillStatus', `❌ Error: ${error.message}`, 'error');
@@ -852,10 +1003,157 @@ async function example() {
                 addStatus('reputationStatus', `❌ Error: ${error.message}`, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Get Reputation Scores';
-            }
-        });
-    </script>
-</body>
-</html>
+                 btn.textContent = 'Get Reputation Scores';
+             }
+         });
+
+         // Blockchain Logging
+         document.getElementById('logToBlockchain').addEventListener('click', async () => {
+             if (!buyerAgent) {
+                 addStatus('logStatus', '❌ Please create an agent first!', 'error');
+                 return;
+             }
+
+             const message = document.getElementById('logMessage').value;
+             const level = document.getElementById('logLevel').value;
+
+             if (!message.trim()) {
+                 addStatus('logStatus', '❌ Please enter a message!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('logToBlockchain');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Logging...';
+             clearStatus('logStatus');
+
+             try {
+                 const response = await fetch('/api/log', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         agentDID: buyerAgent.did,
+                         level,
+                         message,
+                         agentSeed: buyerAgent.seed
+                     })
+                 });
+
+                 const data = await response.json();
+                 addStatus('logStatus', `✅ Logged to blockchain!\nHash: ${data.hash}`, 'success');
+                 
+                 // Add clickable link
+                 const linkDiv = document.createElement('div');
+                 linkDiv.className = 'status info';
+                 linkDiv.innerHTML = `<a href="https://testnet.xrpl.org/transactions/${data.hash}" target="_blank" style="color: #0c5460; text-decoration: underline; font-weight: bold;">🔗 View on Testnet: ${data.hash}</a>`;
+                 document.getElementById('logStatus').appendChild(linkDiv);
+                 
+                 document.getElementById('logMessage').value = '';
+             } catch (error) {
+                 addStatus('logStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'Log to Blockchain';
+             }
+         });
+
+         // Load Activity Feed
+         document.getElementById('loadActivity').addEventListener('click', async () => {
+             if (!buyerAgent) {
+                 addStatus('activityStatus', '❌ Please create an agent first!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('loadActivity');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Loading...';
+             clearStatus('activityStatus');
+             document.getElementById('activityFeed').innerHTML = '';
+
+             try {
+                 const response = await fetch(`/api/logs/${encodeURIComponent(buyerAgent.did)}?limit=20`);
+                 const logs = await response.json();
+
+                 if (logs.length === 0) {
+                     addStatus('activityStatus', 'No logs found. Try logging something first!', 'info');
+                     return;
+                 }
+
+                 const feedDiv = document.getElementById('activityFeed');
+                 logs.forEach(log => {
+                     const logDiv = document.createElement('div');
+                     logDiv.style.cssText = 'padding: 12px; margin: 8px 0; background: #f8f9fa; border-radius: 8px; border-left: 4px solid ' + 
+                         (log.level === 'success' ? '#28a745' : log.level === 'error' ? '#dc3545' : log.level === 'warn' ? '#ffc107' : '#17a2b8');
+                     logDiv.innerHTML = `
+                         <div style="display: flex; justify-content: space-between; align-items: start;">
+                             <div>
+                                 <strong style="text-transform: uppercase; color: #667eea;">${log.level}</strong>
+                                 <p style="margin: 5px 0; color: #333;">${log.message}</p>
+                                 <small style="color: #666;">${new Date(log.timestamp).toLocaleString()}</small>
+                             </div>
+                             ${log.txHash ? `<a href="https://testnet.xrpl.org/transactions/${log.txHash}" target="_blank" style="font-size: 12px; color: #667eea;">View TX</a>` : ''}
+                         </div>
+                     `;
+                     feedDiv.appendChild(logDiv);
+                 });
+
+                 addStatus('activityStatus', `✅ Loaded ${logs.length} log entries`, 'success');
+             } catch (error) {
+                 addStatus('activityStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'Load Activity Feed';
+             }
+         });
+
+         // Load Transaction History
+         document.getElementById('loadHistory').addEventListener('click', async () => {
+             if (!buyerAgent) {
+                 addStatus('activityStatus', '❌ Please create an agent first!', 'error');
+                 return;
+             }
+
+             const btn = document.getElementById('loadHistory');
+             btn.disabled = true;
+             btn.innerHTML = '<span class="loading"></span> Loading...';
+             clearStatus('activityStatus');
+             document.getElementById('activityFeed').innerHTML = '';
+
+             try {
+                 const response = await fetch(`/api/history/${encodeURIComponent(buyerAgent.did)}?limit=20`);
+                 const history = await response.json();
+
+                 if (history.length === 0) {
+                     addStatus('activityStatus', 'No transaction history found.', 'info');
+                     return;
+                 }
+
+                 const feedDiv = document.getElementById('activityFeed');
+                 history.forEach(tx => {
+                     const txDiv = document.createElement('div');
+                     txDiv.style.cssText = 'padding: 12px; margin: 8px 0; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea';
+                     txDiv.innerHTML = `
+                         <div style="display: flex; justify-content: space-between; align-items: start;">
+                             <div>
+                                 <strong style="color: #667eea;">${tx.type}</strong>
+                                 <p style="margin: 5px 0; color: #333; font-size: 12px;">Hash: ${tx.hash.substring(0, 20)}...</p>
+                                 <small style="color: #666;">Result: ${tx.result}</small>
+                             </div>
+                             <a href="https://testnet.xrpl.org/transactions/${tx.hash}" target="_blank" style="font-size: 12px; color: #667eea;">View</a>
+                         </div>
+                     `;
+                     feedDiv.appendChild(txDiv);
+                 });
+
+                 addStatus('activityStatus', `✅ Loaded ${history.length} transactions`, 'success');
+             } catch (error) {
+                 addStatus('activityStatus', `❌ Error: ${error.message}`, 'error');
+             } finally {
+                 btn.disabled = false;
+                 btn.textContent = 'Load Transaction History';
+             }
+         });
+     </script>
+ </body>
+ </html>
 

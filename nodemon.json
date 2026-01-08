@@ -1,0 +1,7 @@
+{
+  "watch": ["src", "server.ts", "frontend"],
+  "ext": "ts,js,html,css",
+  "ignore": ["node_modules", "dist"],
+  "exec": "ts-node server.ts"
+}
+
